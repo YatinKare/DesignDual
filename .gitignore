@@ -1,0 +1,25 @@
+frontend/design-dual/node_modules
+
+# Output
+frontend/design-dual/.output
+frontend/design-dual/.vercel
+frontend/design-dual/.netlify
+frontend/design-dual/.wrangler
+frontend/design-dual/.svelte-kit
+frontend/design-dual/build
+
+# OS
+*.DS_Store
+frontend/design-dual/Thumbs.db
+
+# Env
+frontend/design-dual/.env
+frontend/design-dual/.env.*
+frontend/design-dual/!.env.example
+frontend/design-dual/!.env.test
+
+# Vite
+frontend/design-dual/vite.config.js.timestamp-*
+frontend/design-dual/vite.config.ts.timestamp-*
+# Playwright
+frontend/design-dual/test-results
