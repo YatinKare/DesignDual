@@ -225,6 +225,7 @@ Event 7: { status: "complete",    message: "The verdict is ready.", result: {...
 ---
 
 ### Integration Pattern: FastAPI + ADK
+Architecture rule: routes delegate all business/data logic to services (routes stay thin).
 
 Instead of using ADK's built-in API server, wrap ADK's `Runner` in your own FastAPI app for more control:
 

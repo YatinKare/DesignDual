@@ -68,6 +68,7 @@ According to the PRD (prd-agents-v1.md + prd-v1.md), we need to implement:
 ### Developer notes:
 - Before beginning a task, read the task, read the documentation via the docs mcp.
 - **ONLY USE `UV` NO RAW PYTHON COMMANDS NEVER EVER RUN JUST PYTHON3 ...EVERYTHING NEEDS TO BE MANAGED VIA UV**.
+- Architecture rule: routes delegate all business/data logic to services (routes stay thin).
 
 ### Dependencies Required
 
