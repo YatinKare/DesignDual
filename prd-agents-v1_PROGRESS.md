@@ -159,9 +159,9 @@ Based on the PRD, the backend needs:
 ### Phase 2: File Upload & Storage (Submission Creation)
 - [x] 2.1: Implement POST /api/submissions endpoint with multipart form-data handling
 - [x] 2.2: Create file storage service (save uploaded PNGs and webm files)
-- [ ] 2.3: Implement submission record creation in SQLite
+- [x] 2.3: Implement submission record creation in SQLite (already done in 2.1 via create_submission service)
 - [ ] 2.4: Add file validation (check file types, size limits)
-- [ ] 2.5: Return submission_id immediately upon upload
+- [x] 2.5: Return submission_id immediately upon upload (already done in 2.1)
 - [ ] 2.6: Test file upload flow end-to-end by making a temp file, doing a curl, deleting temp file.
 
 ### Phase 3: Audio Transcription (Gemini API Integration)
