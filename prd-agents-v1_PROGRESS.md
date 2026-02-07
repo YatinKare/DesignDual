@@ -65,6 +65,10 @@ According to the PRD (prd-agents-v1.md + prd-v1.md), we need to implement:
 6. **File Storage**: Save uploaded files to disk/memory temporarily for processing
 7. **Docs**: Use the `google-adk` mcp server to get best practices, examples and should be used for everything.
 
+### Developer notes:
+- Before beginning a task, read the task, read the documentation via the docs mcp.
+- **ONLY USE `UV` NO RAW PYTHON COMMANDS NEVER EVER RUN JUST PYTHON3 ...EVERYTHING NEEDS TO BE MANAGED VIA UV**.
+
 ### Dependencies Required
 
 Based on the PRD, the backend needs:
