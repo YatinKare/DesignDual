@@ -28,3 +28,5 @@ frontend/design-dual/test-results
 .env
 backend/data/
 backend/storage/
+
+__pycache__
