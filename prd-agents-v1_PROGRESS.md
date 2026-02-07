@@ -150,7 +150,7 @@ Based on the PRD, the backend needs:
 - [x] 1.4: Define Pydantic schemas (Problem, Submission, GradingReport, DimensionScore)
 - [x] 1.5: Create SQLite database schema and initialization script
 - [x] 1.6: Create main.py FastAPI application with CORS middleware
-- [ ] 1.7: Implement GET /api/problems endpoint (list all problems)
+- [x] 1.7: Implement GET /api/problems endpoint (list all problems)
 - [ ] 1.8: Implement GET /api/problems/{id} endpoint (problem details)
 - [ ] 1.9: Create seed data for 6 system design problems
 - [ ] 1.10: Test basic routes work (can fetch problems)
@@ -296,6 +296,8 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
   - Authored `app/db/schema.sql` for problems, submissions, grading_results with JSON checks + FK constraints and provided `uv run python -m app.db.init_db` helper to bootstrap `backend/data/designdual.db`
 - Task 1.6: Added FastAPI app factory with CORS configuration
   - Added `app/main.py` to load `.env`, configure CORS from `FRONTEND_ORIGIN`, and expose `app` for uvicorn
+- Task 1.7: Implemented problem listing endpoint
+  - Added `app/routes/problems.py` to fetch problem summaries from SQLite and wired the router into `app/main.py`
 
 ## Notes
 - The correct package for Google ADK is `google-adk`, not `google-adk-python` or just `google-genai`
