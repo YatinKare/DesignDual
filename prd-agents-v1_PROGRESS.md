@@ -145,7 +145,7 @@ Based on the PRD, the backend needs:
 
 ### Phase 1: Backend Foundation (Dependencies + Database + Basic Routes)
 - [x] 1.1: Update pyproject.toml with all required dependencies
-- [ ] 1.2: Create .env.example file for configuration template
+- [x] 1.2: Create .env.example file for configuration template
 - [ ] 1.3: Create backend/app/ directory structure (models/, routes/, services/, agents/)
 - [ ] 1.4: Define Pydantic schemas (Problem, Submission, GradingReport, DimensionScore)
 - [ ] 1.5: Create SQLite database schema and initialization script
@@ -285,9 +285,13 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
   - Changed `google-genai>=1.0.0` to `google-adk>=0.1.0` (the correct ADK package)
   - Verified all dependencies install successfully with `uv sync`
   - Installed packages: google-adk==1.24.1, fastapi==0.128.4, uvicorn==0.40.0, aiosqlite==0.22.1, pydantic==2.12.5, python-multipart==0.0.22, sse-starlette==3.2.0, python-dotenv==1.2.1
+- Task 1.2: Added `.env.example` configuration template
+  - Documented FastAPI host/port, SQLite path, upload settings, and Gemini/ADK keys
+  - Set sensible defaults (dev host, 50 MB upload cap) so teammates can copy to `.env`
 
 ## Notes
 - The correct package for Google ADK is `google-adk`, not `google-adk-python` or just `google-genai`
 - `google-genai==1.62.0` is automatically installed as a dependency of `google-adk`
 - All 112 packages installed successfully in backend/.venv
-- Ready to proceed with task 1.2: Create .env.example file
+- Backend still requires a real `.env` populated with secrets before running uvicorn; `.env.example` is checked in for reference
+- Next up: Task 1.3 to scaffold `backend/app` layout
