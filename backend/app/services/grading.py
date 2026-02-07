@@ -3,16 +3,26 @@
 from __future__ import annotations
 
 import base64
+import logging
 from pathlib import Path
 from typing import Any, Dict
 
 import aiosqlite
+from google.adk.runners import InMemoryRunner
 from google.adk.sessions import BaseSessionService, Session
+from google.genai import types
 
+from app.agents import grading_pipeline
 from app.db import BACKEND_DIR, REPO_ROOT
-from app.models import PhaseName
+from app.models import PhaseName, SubmissionStatus
+from app.services.database import get_db_connection
 from app.services.problems import get_problem_by_id
-from app.services.submissions import get_submission_by_id
+from app.services.submissions import (
+    get_submission_by_id,
+    update_submission_status,
+    update_submission_transcripts,
+)
+from app.services.transcription import transcribe_audio_files_parallel
 
 PHASE_ORDER: tuple[PhaseName, ...] = (
     PhaseName.CLARIFY,
@@ -21,6 +31,7 @@ PHASE_ORDER: tuple[PhaseName, ...] = (
     PhaseName.EXPLAIN,
 )
 DEFAULT_ADK_APP_NAME = "designdual-grading"
+LOGGER = logging.getLogger(__name__)
 
 
 def _resolve_artifact_path(path_value: str) -> Path:
@@ -128,6 +139,38 @@ def build_grading_session_state(
     }
 
 
+def _format_pipeline_input(submission_bundle: Dict[str, Any]) -> str:
+    """Format submission payload into a single input prompt for the pipeline."""
+    problem = submission_bundle["problem"]
+    phases = submission_bundle["phases"]
+
+    sections = [
+        f"# Problem: {problem['title']}",
+        "",
+        problem["prompt"],
+        "",
+        "---",
+        "",
+    ]
+
+    for phase in phases:
+        sections.extend(
+            [
+                f"## Phase: {phase['phase'].title()}",
+                "",
+                "### Transcript:",
+                phase.get("transcript") or "",
+                "",
+                f"[Canvas image for {phase['phase']} phase attached]",
+                "",
+                "---",
+                "",
+            ]
+        )
+
+    return "\n".join(sections)
+
+
 async def initialize_grading_session(
     session_service: BaseSessionService,
     submission_bundle: Dict[str, Any],
@@ -172,11 +215,76 @@ async def delete_grading_session(
     return True
 
 
+async def run_grading_pipeline_background(submission_id: str) -> None:
+    """Run transcription + grading asynchronously for a submission."""
+    connection = await get_db_connection()
+    try:
+        submission = await get_submission_by_id(connection, submission_id)
+        if submission is None:
+            LOGGER.error("Submission not found for background grading: %s", submission_id)
+            return
+
+        await update_submission_status(
+            connection,
+            submission_id,
+            SubmissionStatus.TRANSCRIBING,
+        )
+
+        audio_paths = [
+            submission.phases.get(phase).audio_path if submission.phases.get(phase) else None
+            for phase in PHASE_ORDER
+        ]
+        transcripts = await transcribe_audio_files_parallel(audio_paths)
+        transcript_map = {
+            phase: transcripts[index] for index, phase in enumerate(PHASE_ORDER)
+        }
+        await update_submission_transcripts(connection, submission_id, transcript_map)
+
+        await update_submission_status(connection, submission_id, SubmissionStatus.GRADING)
+
+        submission_bundle = await build_submission_bundle(connection, submission_id)
+        runner = InMemoryRunner(agent=grading_pipeline, app_name=DEFAULT_ADK_APP_NAME)
+        user_id = f"submission-{submission_id}"
+        session = await initialize_grading_session(
+            session_service=runner.session_service,
+            submission_bundle=submission_bundle,
+            user_id=user_id,
+            app_name=DEFAULT_ADK_APP_NAME,
+            session_id=submission_id,
+        )
+
+        input_text = _format_pipeline_input(submission_bundle)
+        user_content = types.Content(
+            role="user",
+            parts=[types.Part(text=input_text)],
+        )
+
+        async for _ in runner.run_async(
+            user_id=user_id,
+            session_id=session.id,
+            new_message=user_content,
+        ):
+            pass
+
+        await update_submission_status(connection, submission_id, SubmissionStatus.COMPLETE)
+    except Exception:
+        LOGGER.exception("Background grading failed for submission %s", submission_id)
+        try:
+            await update_submission_status(connection, submission_id, SubmissionStatus.FAILED)
+        except Exception:
+            LOGGER.exception(
+                "Failed to update submission status to failed for %s", submission_id
+            )
+    finally:
+        await connection.close()
+
+
 __all__ = [
     "build_submission_bundle",
     "build_grading_session_state",
     "initialize_grading_session",
     "delete_grading_session",
+    "run_grading_pipeline_background",
     "PHASE_ORDER",
     "DEFAULT_ADK_APP_NAME",
 ]

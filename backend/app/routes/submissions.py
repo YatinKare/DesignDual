@@ -6,11 +6,12 @@ import os
 from typing import Dict, Optional
 
 import aiosqlite
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 
 from app.models import PhaseArtifacts, PhaseName, Submission
 from app.services.database import db_connection
 from app.services.file_storage import get_file_storage_service
+from app.services.grading import run_grading_pipeline_background
 from app.services.submissions import create_submission
 
 router = APIRouter(tags=["submissions"])
@@ -18,6 +19,7 @@ router = APIRouter(tags=["submissions"])
 
 @router.post("/api/submissions", response_model=Dict[str, str])
 async def create_submission_endpoint(
+    background_tasks: BackgroundTasks,
     problem_id: str = Form(...),
     canvas_clarify: UploadFile = File(...),
     canvas_estimate: UploadFile = File(...),
@@ -134,6 +136,7 @@ async def create_submission_endpoint(
         phases=phases_dict,
         submission_id=submission_id,
     )
+    background_tasks.add_task(run_grading_pipeline_background, submission.id)
 
     return {"submission_id": submission.id}
 

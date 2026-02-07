@@ -6,6 +6,7 @@ from .grading import (
     build_submission_bundle,
     delete_grading_session,
     initialize_grading_session,
+    run_grading_pipeline_background,
 )
 from .problems import list_problem_summaries
 from .submissions import (
@@ -28,6 +29,7 @@ __all__ = [
     "build_submission_bundle",
     "initialize_grading_session",
     "delete_grading_session",
+    "run_grading_pipeline_background",
     "list_problem_summaries",
     "create_submission",
     "get_submission_by_id",
@@ -38,4 +40,3 @@ __all__ = [
     "transcribe_audio_files_parallel",
     "is_supported_audio_format",
 ]
-

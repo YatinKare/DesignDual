@@ -207,45 +207,68 @@ Based on the PRD, the backend needs:
 ### Phase 5: Grading Pipeline Integration (Backend Processing)
 - [x] 5.1: Create grading service that assembles submission bundle
 - [x] 5.2: Implement ADK session state initialization from submission data and deletion (or temp use the adk docs mcp server to understand the documentation and best practices for this.)
-- [ ] 5.3: Create background task for running grading pipeline
+- [x] 5.3: Create background task for running grading pipeline
 - [ ] 5.4: Store grading results in database (grading_results table)
 - [ ] 5.5: Implement error handling for agent failures
 - [ ] 5.6: Test full grading pipeline with real submission via curl.
 
-### Phase 6: Server-Sent Events (Real-time Progress Streaming)
-- [ ] 6.1: Install and configure sse-starlette for FastAPI
-- [ ] 6.2: Implement GET /api/submissions/{id}/stream SSE endpoint
-- [ ] 6.3: Create event generator that yields grading progress updates
-- [ ] 6.4: Emit themed status messages (magic narrative)
-- [ ] 6.5: Emit final result when grading completes
-- [ ] 6.6: Test SSE connection and event streaming
+### Phase 6: Fixing (Backend Route Updates + Non-Unit Testing)
+- [ ] 6.1: Add shared contract types (Phase, RubricStatus, StreamStatus, SubmissionResultV2)
+- [ ] 6.2: Update GET /api/problems to return id, name, difficulty (and optional metadata)
+- [ ] 6.3: Update GET /api/problems/{id} to return rubric_definition with phase_weights
+- [ ] 6.4: Harden POST /api/submissions validation (problem_id, PNG/non-empty, phase_times keys)
+- [ ] 6.5: Persist submission artifacts (canvas/audio) with per-phase mapping and URLs
+- [ ] 6.6: Set submission status lifecycle: queued -> processing
+- [ ] 6.7: Standardize SSE stream statuses to new phase list + include optional progress/phase
+- [ ] 6.8: Upgrade GET /api/submissions/{id} to full SubmissionResultV2 payload + result_version
+- [ ] 6.9: Add compatibility mapping for legacy stream statuses
+- [ ] 6.10: Add/adjust storage tables: submissions, submission_artifacts, submission_transcripts, grading_events
+- [ ] 6.11: Non-unit smoke test by running `uv run python -m app.agents.test_pipeline` and inspecting `backend/temp/agent_test_results.json`
 
-### Phase 7: Results Retrieval & Dashboard (Read Endpoints)
-- [ ] 7.1: Implement GET /api/submissions/{id} endpoint (fetch grading result)
-- [ ] 7.2: Implement GET /api/dashboard endpoint (user score history - stretch goal)
-- [ ] 7.3: Test results retrieval
-- [ ] 7.4: Add proper error handling for not-found cases
+### Phase 7: Agentic System v2 (Screen 2 Contract Compliant)
+- [ ] 7.1: Shift to phase-first grading with 4 phase agents (clarify/estimate/design/explain)
+- [ ] 7.2: Add ParallelAgent for phase agents + SequentialAgent orchestration (GradingPipelineV2)
+- [ ] 7.3: Implement RubricRadarAgent (rubric + radar + overall_score + verdict + summary)
+- [ ] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
+- [ ] 7.5: Implement FinalAssemblerV2 (build SubmissionResultV2, enforce 4 phase cards + 4 evidence)
+- [ ] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
+- [ ] 7.7: Update session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2)
+- [ ] 7.8: Update agent prompts to strict JSON with timestamps + evidence per phase
 
-### Phase 8: Frontend Integration Points (Backend Ready for Frontend)
-- [ ] 8.1: Document all API endpoints with example requests/responses
-- [ ] 8.2: Test CORS configuration for frontend connection
-- [ ] 8.3: Verify file upload size limits are appropriate
-- [ ] 8.4: Create Postman/Thunder Client collection for testing
-- [ ] 8.5: End-to-end test: upload submission → stream progress → fetch result via curl.
+### Phase 8: Server-Sent Events (Real-time Progress Streaming)
+- [ ] 8.1: Install and configure sse-starlette for FastAPI
+- [ ] 8.2: Implement GET /api/submissions/{id}/stream SSE endpoint
+- [ ] 8.3: Create event generator that yields grading progress updates
+- [ ] 8.4: Emit themed status messages (magic narrative)
+- [ ] 8.5: Emit final result when grading completes
+- [ ] 8.6: Test SSE connection and event streaming
 
-### Phase 9: Error Handling & Robustness
-- [ ] 9.1: Add comprehensive error handling to all routes
-- [ ] 9.2: Add logging for debugging (use Python logging module)
-- [ ] 9.3: Handle edge cases (missing files, invalid data, API failures)
-- [ ] 9.4: Add request validation with Pydantic
-- [ ] 9.5: Test failure scenarios (invalid problem_id, corrupt files, etc.)
+### Phase 9: Results Retrieval & Dashboard (Read Endpoints)
+- [ ] 9.1: Implement GET /api/submissions/{id} endpoint (fetch grading result)
+- [ ] 9.2: Implement GET /api/dashboard endpoint (user score history - stretch goal)
+- [ ] 9.3: Test results retrieval
+- [ ] 9.4: Add proper error handling for not-found cases
 
-### Phase 10: Deployment Preparation
-- [ ] 10.1: Create requirements.txt or finalize pyproject.toml
-- [ ] 10.2: Write setup instructions in README
-- [ ] 10.3: Test fresh installation from scratch
-- [ ] 10.4: Verify all environment variables are documented
-- [ ] 10.5: Add health check endpoint (GET /health or GET /)
+### Phase 10: Frontend Integration Points (Backend Ready for Frontend)
+- [ ] 10.1: Document all API endpoints with example requests/responses
+- [ ] 10.2: Test CORS configuration for frontend connection
+- [ ] 10.3: Verify file upload size limits are appropriate
+- [ ] 10.4: Create Postman/Thunder Client collection for testing
+- [ ] 10.5: End-to-end test: upload submission → stream progress → fetch result via curl.
+
+### Phase 11: Error Handling & Robustness
+- [ ] 11.1: Add comprehensive error handling to all routes
+- [ ] 11.2: Add logging for debugging (use Python logging module)
+- [ ] 11.3: Handle edge cases (missing files, invalid data, API failures)
+- [ ] 11.4: Add request validation with Pydantic
+- [ ] 11.5: Test failure scenarios (invalid problem_id, corrupt files, etc.)
+
+### Phase 12: Deployment Preparation
+- [ ] 12.1: Create requirements.txt or finalize pyproject.toml
+- [ ] 12.2: Write setup instructions in README
+- [ ] 12.3: Test fresh installation from scratch
+- [ ] 12.4: Verify all environment variables are documented
+- [ ] 12.5: Add health check endpoint (GET /health or GET /)
 
 ## Task Dependencies
 
@@ -255,17 +278,19 @@ Phase 1 (Foundation)
       └── Phase 3 (Transcription)
           └── Phase 4 (Agents)
               └── Phase 5 (Grading Pipeline)
-                  ├── Phase 6 (SSE Streaming)
-                  └── Phase 7 (Results Retrieval)
-                      └── Phase 8 (Frontend Integration)
-                          └── Phase 9 (Error Handling)
-                              └── Phase 10 (Deployment)
+                  └── Phase 6 (Fixing)
+                      └── Phase 7 (Agentic System v2)
+                          ├── Phase 8 (SSE Streaming)
+                          └── Phase 9 (Results Retrieval)
+                              └── Phase 10 (Frontend Integration)
+                                  └── Phase 11 (Error Handling)
+                                      └── Phase 12 (Deployment)
 ```
 
-**Critical Path**: Foundation → File Upload → Agents → Grading Pipeline → SSE
+**Critical Path**: Foundation → File Upload → Agents → Grading Pipeline → Fixing → Agentic v2 → SSE
 **Parallel Work Possible**:
 - Tasks 1.7-1.8 (problem endpoints) can be done in parallel with 1.4-1.6
-- Phase 7 (results retrieval) can be done in parallel with Phase 6 (SSE)
+- Phase 9 (results retrieval) can be done in parallel with Phase 8 (SSE)
 - Phase 9 (error handling) can be incrementally added throughout
 
 ## Notes
@@ -281,10 +306,10 @@ Phase 1 (Foundation)
 - **Rate Limits**: Consider rate limits for hackathon usage (6 problems × multiple submissions)
 
 ### Implementation Priorities
-1. **Must-Have**: Phases 1-6 (core grading pipeline with SSE)
-2. **Should-Have**: Phases 7-8 (results retrieval + frontend integration)
-3. **Nice-to-Have**: Phase 9 (comprehensive error handling)
-4. **Stretch**: Task 7.2 (dashboard endpoint for score history)
+1. **Must-Have**: Phases 1-8 (core grading pipeline with fixing + agentic v2 + SSE)
+2. **Should-Have**: Phases 9-10 (results retrieval + frontend integration)
+3. **Nice-to-Have**: Phase 11 (comprehensive error handling)
+4. **Stretch**: Task 9.2 (dashboard endpoint for score history)
 
 ### Testing Strategy
 
@@ -293,12 +318,25 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 - Phase 1: ~2 hours (setup + basic routes)
 - Phase 2: ~1 hour (file upload)
 - Phase 3: ~1.5 hours (audio transcription + Gemini research)
+
+## Iteration Update (Sat Feb 7 2026)
+
+### Completed This Iteration
+- Task 5.3: Added background grading execution wired from `POST /api/submissions` using FastAPI `BackgroundTasks`.
+- Implemented `run_grading_pipeline_background(submission_id)` in grading service to run: status update to transcribing, parallel audio transcription, transcript merge, status update to grading, ADK pipeline run, final status update to complete, and failed status on exceptions.
+
+### Notes
+- User requested no new markdown files; continued using and updating this existing progress file only.
+- `pytest` is not installed in the current backend environment (`uv run --project backend pytest -q` fails with executable not found), so validation for this iteration used `uv run --project backend python -m compileall backend/app`.
+- Task scope intentionally limited to 5.3; grading result persistence remains for 5.4.
 - Phase 4: ~3 hours (5 agents + orchestration)
 - Phase 5: ~1.5 hours (grading integration)
-- Phase 6: ~1 hour (SSE)
-- Phase 7: ~0.5 hours (results endpoints)
-- Phases 8-10: ~1.5 hours (testing + polish)
-**Total**: ~12 hours for full backend
+- Phase 6: ~2 hours (backend route fixes + smoke testing)
+- Phase 7: ~2 hours (agentic v2 orchestration + prompts)
+- Phase 8: ~1 hour (SSE)
+- Phase 9: ~0.5 hours (results endpoints)
+- Phases 10-12: ~1.5 hours (testing + polish)
+**Total**: ~16 hours for full backend
 
 ## Completed This Iteration
 - Task 3.6: Tested transcription using sample audio file
