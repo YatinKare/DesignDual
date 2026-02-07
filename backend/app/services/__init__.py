@@ -1,6 +1,7 @@
 """Service layer helpers for the backend."""
 
 from .database import db_connection, get_db_connection
+from .grading import build_submission_bundle
 from .problems import list_problem_summaries
 from .submissions import (
     create_submission,
@@ -18,6 +19,7 @@ from .transcription import (
 __all__ = [
     "db_connection",
     "get_db_connection",
+    "build_submission_bundle",
     "list_problem_summaries",
     "create_submission",
     "get_submission_by_id",
@@ -28,6 +30,5 @@ __all__ = [
     "transcribe_audio_files_parallel",
     "is_supported_audio_format",
 ]
-
 
 

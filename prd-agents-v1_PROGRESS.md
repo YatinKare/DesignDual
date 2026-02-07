@@ -69,6 +69,8 @@ According to the PRD (prd-agents-v1.md + prd-v1.md), we need to implement:
 - Before beginning a task, read the task, read the documentation via the docs mcp.
 - **ONLY USE `UV` NO RAW PYTHON COMMANDS NEVER EVER RUN JUST PYTHON3 ...EVERYTHING NEEDS TO BE MANAGED VIA UV**.
 - Architecture rule: routes delegate all business/data logic to services (routes stay thin).
+- use bun not npm.
+- never create another prd-agents file, just append / update to this one.
 
 ### Dependencies Required
 
@@ -196,15 +198,15 @@ Based on the PRD, the backend needs:
 - [x] 4.8: Create ADK orchestration with SequentialAgent + ParallelAgent
   - Created `orchestrator.py` - ParallelAgent(4 specialists) → SynthesisAgent via SequentialAgent
   - Updated `__init__.py` to export grading_pipeline and all agents
-- [ ] 4.9: Test individual agents with sample inputs
+- [x] 4.9: Test individual agents with sample inputs
   - Created `test_pipeline.py` - tests individual agents with sample inputs
   - Outputed to temp/agent_test_results.json
   - Issues: json still has markdown quotes, make sure to use regex to remove them.
-- [ ] 4.11: Test full agent pipeline with mock submission data, doing a curl, and keep mock submission data in that temp folder for later testing.
+- [x] 4.11: Test full agent pipeline with mock submission data, doing a curl, and keep mock submission data in that temp folder for later testing.
 
 ### Phase 5: Grading Pipeline Integration (Backend Processing)
-- [ ] 5.1: Create grading service that assembles submission bundle
-- [ ] 5.2: Implement ADK session state initialization from submission data
+- [x] 5.1: Create grading service that assembles submission bundle
+- [ ] 5.2: Implement ADK session state initialization from submission data and deletion (or temp use the adk docs mcp server to understand the documentation and best practices for this.)
 - [ ] 5.3: Create background task for running grading pipeline
 - [ ] 5.4: Store grading results in database (grading_results table)
 - [ ] 5.5: Implement error handling for agent failures
@@ -353,3 +355,31 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
   - **Option 2**: Convert webm to MP3/WAV using ffmpeg before transcription
   - **Recommendation**: Implement with try-except and fallback to conversion if direct upload fails
 - Next up: Task 3.6 to test transcription with sample audio files
+
+## Iteration Update (Latest)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 5.1: Added grading bundle assembly service at `backend/app/services/grading.py`.
+  - Implemented `build_submission_bundle(connection, submission_id)` to assemble:
+    - `problem` payload from DB
+    - `phase_times` from submission
+    - ordered `phases` entries (`clarify`, `estimate`, `design`, `explain`) with `canvas_base64`, transcript metadata, and audio path
+  - Added path resolution + file loading helpers so stored artifact paths are resolved robustly.
+  - Exported `build_submission_bundle` in `backend/app/services/__init__.py`.
+
+### Manual Validation
+- Ran manual simulation (no unit tests) using existing stored submission data and artifact files:
+  - `uv run python` script calling `build_submission_bundle` for submission `36081f88-d0e0-4b2d-8071-6da870fe60bf`
+  - Verified output had:
+    - correct `submission_id` and `problem.id`
+    - all 4 phases present and ordered
+    - non-empty `canvas_base64` for each phase
+    - expected `phase_times` keys
+- Ran compile validation:
+  - `uv run python -m py_compile app/services/grading.py`
+
+### Notes
+- Per instruction, no new `prd-agents-*` markdown files were created; this iteration updated only the v1 progress markdown.
