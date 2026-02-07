@@ -21,6 +21,7 @@ frontend/design-dual/!.env.test
 # Vite
 frontend/design-dual/vite.config.js.timestamp-*
 frontend/design-dual/vite.config.ts.timestamp-*
+frontend/design-dual/.mcp.json
 # Playwright
 frontend/design-dual/test-results
 
