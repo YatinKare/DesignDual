@@ -160,7 +160,7 @@ Based on the PRD, the backend needs:
 - [x] 2.1: Implement POST /api/submissions endpoint with multipart form-data handling
 - [x] 2.2: Create file storage service (save uploaded PNGs and webm files)
 - [x] 2.3: Implement submission record creation in SQLite (already done in 2.1 via create_submission service)
-- [ ] 2.4: Add file validation (check file types, size limits)
+- [x] 2.4: Add file validation (check file types, size limits)
 - [x] 2.5: Return submission_id immediately upon upload (already done in 2.1)
 - [ ] 2.6: Test file upload flow end-to-end by making a temp file, doing a curl, deleting temp file.
 
@@ -282,16 +282,22 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 **Total**: ~12 hours for full backend
 
 ## Completed This Iteration
-- Task 2.2: Created file storage service for saving uploaded PNGs and webm files
-  - Created `app/services/file_storage.py` with `FileStorageService` class
-  - Implements `save_canvas()` and `save_audio()` methods for organized file storage
-  - Files saved to `storage/uploads/{submission_id}/` directory structure
-  - Returns relative paths (e.g., `storage/uploads/{id}/canvas_clarify.png`)
-  - Fixed critical bug: moved `os.getenv("UPLOAD_ROOT")` call from module-level to function-level to ensure .env is loaded before accessing environment variables
-  - Updated `app/routes/submissions.py` to use the file storage service
-  - Updated `app/services/submissions.py` to accept optional `submission_id` parameter for coordination with file storage
-  - Files are correctly stored with paths in database matching actual file locations
-  - Tested end-to-end: file upload → storage → database record → verification
+- Task 2.4: Added comprehensive file validation for uploads
+  - Enhanced `FileStorageService` with validation methods:
+    - `validate_file_size()`: Checks files don't exceed MAX_UPLOAD_SIZE_MB (default 50 MB)
+    - `validate_file_type()`: Verifies MIME types match expected types
+  - Updated `save_file()` to accept `expected_types` parameter and validate before saving
+  - Canvas files validated as `image/png` only
+  - Audio files validated as `audio/webm` or `video/webm` (webm can have either MIME type)
+  - Returns HTTP 413 for files exceeding size limit with clear error message showing actual vs max size
+  - Returns HTTP 400 for invalid file types with expected types listed
+  - Updated route to read `MAX_UPLOAD_SIZE_MB` from environment and pass to storage service
+  - Tested validation with:
+    - ✅ Valid PNG uploads (accepted)
+    - ✅ Invalid file type (text file rejected with proper error)
+    - ✅ Oversized file (51 MB file rejected with size error)
+    - ✅ Valid webm audio (accepted when properly typed)
+    - ✅ Invalid audio type (text file rejected as audio)
 
 ## Completed Previously
 - Task 2.1: Implemented POST /api/submissions endpoint with multipart form-data handling

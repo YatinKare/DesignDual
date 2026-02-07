@@ -48,8 +48,7 @@ async def create_submission_endpoint(
     Returns:
         Dictionary with submission_id
     """
-    # TODO: Validate problem_id exists (will be done in task 2.3)
-    # TODO: Validate file types and sizes (will be done in task 2.4)
+    # TODO: Validate problem_id exists
 
     import json
     import uuid
@@ -69,9 +68,10 @@ async def create_submission_endpoint(
     # Generate submission ID before saving files
     submission_id = str(uuid.uuid4())
 
-    # Initialize file storage service (get upload root from environment at runtime)
+    # Initialize file storage service (get upload root and size limit from environment at runtime)
     upload_root = os.getenv("UPLOAD_ROOT", "./storage/uploads")
-    storage_service = get_file_storage_service(upload_root)
+    max_size_mb = int(os.getenv("MAX_UPLOAD_SIZE_MB", "50"))
+    storage_service = get_file_storage_service(upload_root, max_size_mb)
 
     # Save canvas files (required)
     canvas_files = {
