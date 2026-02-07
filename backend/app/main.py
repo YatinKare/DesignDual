@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import problems_router
+from app.routes import problems_router, submissions_router
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(REPO_ROOT / ".env")
@@ -38,6 +38,7 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(problems_router)
+    app.include_router(submissions_router)
 
     return app
 

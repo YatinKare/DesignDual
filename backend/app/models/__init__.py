@@ -12,6 +12,9 @@ from .grading import DimensionScore, GradingReport
 from .problem import Problem, ProblemSummary
 from .submission import PhaseArtifacts, Submission
 
+# Rebuild Submission model after GradingReport is imported to resolve forward references
+Submission.model_rebuild()
+
 __all__ = [
     "APISchema",
     "DifficultyLevel",

@@ -157,7 +157,7 @@ Based on the PRD, the backend needs:
 - [x] 1.10: Test basic routes work (can fetch problems)
 
 ### Phase 2: File Upload & Storage (Submission Creation)
-- [ ] 2.1: Implement POST /api/submissions endpoint with multipart form-data handling
+- [x] 2.1: Implement POST /api/submissions endpoint with multipart form-data handling
 - [ ] 2.2: Create file storage service (save uploaded PNGs and webm files)
 - [ ] 2.3: Implement submission record creation in SQLite
 - [ ] 2.4: Add file validation (check file types, size limits)
@@ -282,14 +282,15 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 **Total**: ~12 hours for full backend
 
 ## Completed This Iteration
-- Task 1.10: Tested basic routes work (can fetch problems)
-  - Started FastAPI server successfully with `uv run uvicorn app.main:app`
-  - Verified GET /api/problems returns all 6 problems with correct structure (id, slug, title, difficulty, focus_tags, estimated_time_minutes)
-  - Verified GET /api/problems/{id} returns full problem details including prompt, constraints, phase_time_minutes, rubric_hints, sample_solution_outline
-  - Tested with multiple problem IDs: url-shortener, spotify - all returned correct data
-  - Confirmed 404 error handling: GET /api/problems/nonexistent-problem returns {"detail":"Problem 'nonexistent-problem' not found"} with HTTP 404
-  - Verified all 6 problems accessible: 2 apprentice, 2 sorcerer, 2 archmage difficulty levels
-  - All Phase 1 tasks now complete - backend foundation is ready for Phase 2 (file upload)
+- Task 2.1: Implemented POST /api/submissions endpoint with multipart form-data handling
+  - Created `app/services/submissions.py` with `create_submission()` and `get_submission_by_id()` functions
+  - Created `app/routes/submissions.py` with POST /api/submissions endpoint accepting 4 required canvas PNGs, 4 optional audio files, problem_id, and phase_times JSON
+  - Fixed Pydantic forward reference issue by adding `Submission.model_rebuild()` in `app/models/__init__.py`
+  - Registered submissions_router in `app/main.py`
+  - Tested with curl: successfully creates submissions and returns submission_id
+  - Verified database storage: submissions table correctly stores problem_id, status (received), phase_times JSON, and phases JSON
+  - Tested with multiple problems (url-shortener, spotify) - both work correctly
+  - Note: File saving to disk (task 2.2) and validation (task 2.4) are deferred - currently accepts files but doesn't persist them
 
 ## Completed Previously
 - Task 1.1: Updated pyproject.toml with correct dependencies
