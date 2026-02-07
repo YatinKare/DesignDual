@@ -153,7 +153,7 @@ Based on the PRD, the backend needs:
 - [x] 1.6: Create main.py FastAPI application with CORS middleware
 - [x] 1.7: Implement GET /api/problems endpoint (list all problems)
 - [x] 1.8: Implement GET /api/problems/{id} endpoint (problem details)
-- [ ] 1.9: Create seed data for 6 system design problems
+- [x] 1.9: Create seed data for 6 system design problems
 - [ ] 1.10: Test basic routes work (can fetch problems)
 
 ### Phase 2: File Upload & Storage (Submission Creation)
@@ -282,6 +282,15 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 **Total**: ~12 hours for full backend
 
 ## Completed This Iteration
+- Task 1.9: Created seed data for 6 system design problems
+  - Created `backend/app/db/seed_data.sql` with INSERT statements for all 6 problems
+  - Problems: URL Shortener (apprentice), Rate Limiter (apprentice), Spotify (sorcerer), Chat System (sorcerer), YouTube (archmage), Google Docs (archmage)
+  - Each problem includes: title, prompt, difficulty, focus_tags, constraints, estimated_time_minutes, phase_time_minutes, rubric_hints, sample_solution_outline
+  - All JSON fields properly formatted and validated by SQLite CHECK constraints
+  - Successfully inserted seed data into database - verified 6 rows in problems table
+  - Tested query: all problems have correct difficulty levels and time allocations
+
+## Completed Previously
 - Task 1.1: Updated pyproject.toml with correct dependencies
   - Changed `google-genai>=1.0.0` to `google-adk>=0.1.0` (the correct ADK package)
   - Verified all dependencies install successfully with `uv sync`
