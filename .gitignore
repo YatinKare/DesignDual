@@ -26,3 +26,5 @@ frontend/design-dual/test-results
 
 # Backend
 .env
+backend/data/
+backend/storage/

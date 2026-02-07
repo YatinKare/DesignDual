@@ -148,7 +148,7 @@ Based on the PRD, the backend needs:
 - [x] 1.2: Create .env.example file for configuration template
 - [x] 1.3: Create backend/app/ directory structure (models/, routes/, services/, agents/)
 - [x] 1.4: Define Pydantic schemas (Problem, Submission, GradingReport, DimensionScore)
-- [ ] 1.5: Create SQLite database schema and initialization script
+- [x] 1.5: Create SQLite database schema and initialization script
 - [ ] 1.6: Create main.py FastAPI application with CORS middleware
 - [ ] 1.7: Implement GET /api/problems endpoint (list all problems)
 - [ ] 1.8: Implement GET /api/problems/{id} endpoint (problem details)
@@ -292,6 +292,8 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
   - Added `app/` package with `models`, `routes`, `services`, and `agents` subpackages plus `__init__.py` exports to prepare for future modules
 - Task 1.4: Added core Pydantic schemas for API contracts
   - Created enums + shared `APISchema` config plus `Problem`, `Submission`, `DimensionScore`, and `GradingReport` models with per-phase metadata
+- Task 1.5: Added SQLite schema + init utility
+  - Authored `app/db/schema.sql` for problems, submissions, grading_results with JSON checks + FK constraints and provided `uv run python -m app.db.init_db` helper to bootstrap `backend/data/designdual.db`
 
 ## Notes
 - The correct package for Google ADK is `google-adk`, not `google-adk-python` or just `google-genai`
