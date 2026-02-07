@@ -1,6 +1,7 @@
 <script>
+  import Excalidraw from '$lib/Excalidraw.svelte';
+
   let activeTab = $state('problem');
-  let zoom = $state(100);
   let activePhase = $state('design');
 
   const phases = [
@@ -8,16 +9,6 @@
     { id: 'estimate', label: 'Estimate', icon: 'calculate' },
     { id: 'design', label: 'Design', icon: 'bolt' },
     { id: 'explain', label: 'Explain', icon: 'record_voice_over' },
-  ];
-
-  const tools = [
-    { icon: 'near_me', label: 'Select' },
-    { icon: 'check_box_outline_blank', label: 'Rectangle', active: true },
-    { icon: 'diamond', label: 'Diamond' },
-    { icon: 'radio_button_unchecked', label: 'Circle' },
-    { icon: 'arrow_right_alt', label: 'Arrow' },
-    { icon: 'edit', label: 'Draw' },
-    { icon: 'text_fields', label: 'Text' },
   ];
 
   const functionalReqs = [
@@ -208,109 +199,12 @@
       </div>
     </section>
 
-    <!-- Right Panel: Canvas -->
-    <section class="flex-1 relative overflow-hidden flex flex-col" style="background-color: oklch(var(--b2));">
-      <!-- Toolbar -->
-      <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-base-100 border border-base-300 rounded-lg shadow-lg p-1.5 flex items-center space-x-1 z-20">
-        {#each tools as tool (tool.label)}
-          <button
-            class="p-2 rounded transition {tool.active ? 'bg-primary/10 text-primary' : 'hover:bg-base-200'}"
-            title={tool.label}
-          >
-            <span class="material-icons-round text-xl">{tool.icon}</span>
-          </button>
-        {/each}
-        <div class="w-px h-6 bg-base-300 mx-1"></div>
-        <button class="p-2 rounded hover:bg-base-200 transition" title="Image">
-          <span class="material-icons-round text-xl">image</span>
-        </button>
-        <button class="p-2 rounded hover:bg-base-200 transition" title="Add">
-          <span class="material-icons-round text-xl">library_add</span>
-        </button>
-      </div>
-
-      <!-- Dot grid background -->
-      <div class="absolute inset-0 opacity-20 z-0" style="background-image: radial-gradient(oklch(var(--bc) / 0.3) 1px, transparent 1px); background-size: 20px 20px;"></div>
-
-      <!-- SVG Diagram -->
-      <div class="flex-1 z-10 overflow-auto relative cursor-crosshair flex items-center justify-center">
-        <svg width="800" height="500" style="font-family: 'Caveat', cursive;">
-          <!-- Client -->
-          <g transform="translate(50, 200)">
-            <circle cx="20" cy="20" r="15" fill="none" stroke="oklch(var(--bc))" stroke-width="3" opacity="0.6" />
-            <path d="M5 50 C 5 35, 35 35, 35 50" fill="none" stroke="oklch(var(--bc))" stroke-width="3" opacity="0.6" />
-            <text fill="oklch(var(--bc) / 0.6)" font-size="20" x="0" y="75">Client</text>
-          </g>
-
-          <!-- Arrow: Client → LB -->
-          <path d="M100 220 L 200 220" fill="none" stroke="oklch(var(--bc) / 0.5)" stroke-dasharray="5,5" stroke-width="2" marker-end="url(#arrowhead)" />
-
-          <!-- Load Balancer -->
-          <g transform="translate(220, 180)">
-            <rect x="0" y="0" width="80" height="80" rx="4" fill="transparent" stroke="oklch(var(--wa))" stroke-width="3" />
-            <text fill="oklch(var(--wa))" font-size="18" x="10" y="45">LB</text>
-          </g>
-
-          <!-- Arrow: LB → App Svr 1 -->
-          <path d="M300 200 L 380 150" fill="none" stroke="oklch(var(--bc) / 0.5)" stroke-width="2" marker-end="url(#arrowhead)" />
-          <!-- Arrow: LB → App Svr 2 -->
-          <path d="M300 240 L 380 290" fill="none" stroke="oklch(var(--bc) / 0.5)" stroke-width="2" marker-end="url(#arrowhead)" />
-
-          <!-- App Server 1 -->
-          <g transform="translate(400, 100)">
-            <rect x="0" y="0" width="120" height="80" rx="4" fill="transparent" stroke="oklch(var(--p))" stroke-width="3" />
-            <text fill="oklch(var(--p))" font-size="20" x="15" y="45">App Svr 1</text>
-          </g>
-
-          <!-- App Server 2 -->
-          <g transform="translate(400, 260)">
-            <rect x="0" y="0" width="120" height="80" rx="4" fill="transparent" stroke="oklch(var(--p))" stroke-width="3" />
-            <text fill="oklch(var(--p))" font-size="20" x="15" y="45">App Svr 2</text>
-          </g>
-
-          <!-- DB Cluster (cylinder shape) -->
-          <g transform="translate(600, 150)">
-            <path d="M0 20 A 40 10 0 1 1 80 20 A 40 10 0 1 1 0 20 Z" fill="none" stroke="oklch(var(--su))" stroke-width="3" />
-            <path d="M0 20 L 0 100 A 40 10 0 1 0 80 100 L 80 20" fill="none" stroke="oklch(var(--su))" stroke-width="3" />
-            <text fill="oklch(var(--su))" font-size="18" x="5" y="65">DB Cluster</text>
-          </g>
-
-          <!-- Redis (dashed box) -->
-          <g transform="translate(600, 330)">
-            <rect x="0" y="0" width="100" height="60" rx="4" fill="transparent" stroke="oklch(var(--er))" stroke-dasharray="8,4" stroke-width="3" />
-            <text fill="oklch(var(--er))" font-size="20" x="20" y="35">Redis</text>
-          </g>
-
-
-          <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="oklch(var(--bc) / 0.5)" />
-            </marker>
-          </defs>
-        </svg>
-
-        <!-- Interviewer cursor -->
-        <div class="absolute top-[300px] left-[450px] z-20 pointer-events-none flex items-center gap-2">
-          <span class="material-icons-round text-warning text-lg" style="transform: rotate(-30deg);">navigation</span>
-          <span class="bg-warning text-white text-xs px-1.5 py-0.5 rounded">Interviewer</span>
-        </div>
-      </div>
-
-      <!-- Mic button -->
-      <div class="absolute bottom-6 right-6 z-30">
+    <!-- Right Panel: Excalidraw Canvas -->
+    <section class="flex-1 relative overflow-hidden">
+      <Excalidraw theme="dark" />
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
         <button class="btn btn-circle btn-lg btn-error shadow-lg animate-pulse">
           <span class="material-icons-round text-2xl">mic</span>
-        </button>
-      </div>
-
-      <!-- Zoom controls -->
-      <div class="absolute bottom-6 left-6 z-30 bg-base-100 border border-base-300 rounded-lg shadow-sm flex items-center p-1">
-        <button class="p-1 hover:bg-base-200 rounded transition" onclick={() => zoom = Math.max(50, zoom - 10)}>
-          <span class="material-icons-round text-lg">remove</span>
-        </button>
-        <span class="px-2 text-xs font-mono">{zoom}%</span>
-        <button class="p-1 hover:bg-base-200 rounded transition" onclick={() => zoom = Math.min(200, zoom + 10)}>
-          <span class="material-icons-round text-lg">add</span>
         </button>
       </div>
     </section>
