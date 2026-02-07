@@ -17,6 +17,7 @@ async def create_submission(
     problem_id: str,
     phase_times: Dict[PhaseName, int],
     phases: Dict[PhaseName, PhaseArtifacts],
+    submission_id: Optional[str] = None,
 ) -> Submission:
     """Create a new submission record in the database.
 
@@ -25,11 +26,13 @@ async def create_submission(
         problem_id: ID of the problem being solved
         phase_times: Client-supplied elapsed time (seconds) per phase
         phases: Per-phase artifact metadata (canvas_path, audio_path, etc.)
+        submission_id: Optional pre-generated submission ID (for file storage coordination)
 
     Returns:
         Newly created Submission object
     """
-    submission_id = str(uuid.uuid4())
+    if submission_id is None:
+        submission_id = str(uuid.uuid4())
     now = datetime.utcnow()
 
     # Convert phase_times to JSON (PhaseName -> seconds)

@@ -158,7 +158,7 @@ Based on the PRD, the backend needs:
 
 ### Phase 2: File Upload & Storage (Submission Creation)
 - [x] 2.1: Implement POST /api/submissions endpoint with multipart form-data handling
-- [ ] 2.2: Create file storage service (save uploaded PNGs and webm files)
+- [x] 2.2: Create file storage service (save uploaded PNGs and webm files)
 - [ ] 2.3: Implement submission record creation in SQLite
 - [ ] 2.4: Add file validation (check file types, size limits)
 - [ ] 2.5: Return submission_id immediately upon upload
@@ -282,6 +282,18 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 **Total**: ~12 hours for full backend
 
 ## Completed This Iteration
+- Task 2.2: Created file storage service for saving uploaded PNGs and webm files
+  - Created `app/services/file_storage.py` with `FileStorageService` class
+  - Implements `save_canvas()` and `save_audio()` methods for organized file storage
+  - Files saved to `storage/uploads/{submission_id}/` directory structure
+  - Returns relative paths (e.g., `storage/uploads/{id}/canvas_clarify.png`)
+  - Fixed critical bug: moved `os.getenv("UPLOAD_ROOT")` call from module-level to function-level to ensure .env is loaded before accessing environment variables
+  - Updated `app/routes/submissions.py` to use the file storage service
+  - Updated `app/services/submissions.py` to accept optional `submission_id` parameter for coordination with file storage
+  - Files are correctly stored with paths in database matching actual file locations
+  - Tested end-to-end: file upload → storage → database record → verification
+
+## Completed Previously
 - Task 2.1: Implemented POST /api/submissions endpoint with multipart form-data handling
   - Created `app/services/submissions.py` with `create_submission()` and `get_submission_by_id()` functions
   - Created `app/routes/submissions.py` with POST /api/submissions endpoint accepting 4 required canvas PNGs, 4 optional audio files, problem_id, and phase_times JSON

@@ -12,8 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes import problems_router, submissions_router
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-load_dotenv(REPO_ROOT / ".env")
+# Load .env from backend directory (where the backend code lives)
+BACKEND_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(BACKEND_ROOT / ".env")
 
 
 def _parse_origins(raw_value: str | None) -> List[str]:
