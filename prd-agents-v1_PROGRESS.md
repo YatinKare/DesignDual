@@ -146,7 +146,7 @@ Based on the PRD, the backend needs:
 ### Phase 1: Backend Foundation (Dependencies + Database + Basic Routes)
 - [x] 1.1: Update pyproject.toml with all required dependencies
 - [x] 1.2: Create .env.example file for configuration template
-- [ ] 1.3: Create backend/app/ directory structure (models/, routes/, services/, agents/)
+- [x] 1.3: Create backend/app/ directory structure (models/, routes/, services/, agents/)
 - [ ] 1.4: Define Pydantic schemas (Problem, Submission, GradingReport, DimensionScore)
 - [ ] 1.5: Create SQLite database schema and initialization script
 - [ ] 1.6: Create main.py FastAPI application with CORS middleware
@@ -288,6 +288,8 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 - Task 1.2: Added `.env.example` configuration template
   - Documented FastAPI host/port, SQLite path, upload settings, and Gemini/ADK keys
   - Set sensible defaults (dev host, 50 MB upload cap) so teammates can copy to `.env`
+- Task 1.3: Scaffolded `backend/app` package layout
+  - Added `app/` package with `models`, `routes`, `services`, and `agents` subpackages plus `__init__.py` exports to prepare for future modules
 
 ## Notes
 - The correct package for Google ADK is `google-adk`, not `google-adk-python` or just `google-genai`
