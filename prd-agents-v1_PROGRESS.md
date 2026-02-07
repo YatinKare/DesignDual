@@ -154,7 +154,7 @@ Based on the PRD, the backend needs:
 - [x] 1.7: Implement GET /api/problems endpoint (list all problems)
 - [x] 1.8: Implement GET /api/problems/{id} endpoint (problem details)
 - [x] 1.9: Create seed data for 6 system design problems
-- [ ] 1.10: Test basic routes work (can fetch problems)
+- [x] 1.10: Test basic routes work (can fetch problems)
 
 ### Phase 2: File Upload & Storage (Submission Creation)
 - [ ] 2.1: Implement POST /api/submissions endpoint with multipart form-data handling
@@ -282,13 +282,14 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 **Total**: ~12 hours for full backend
 
 ## Completed This Iteration
-- Task 1.9: Created seed data for 6 system design problems
-  - Created `backend/app/db/seed_data.sql` with INSERT statements for all 6 problems
-  - Problems: URL Shortener (apprentice), Rate Limiter (apprentice), Spotify (sorcerer), Chat System (sorcerer), YouTube (archmage), Google Docs (archmage)
-  - Each problem includes: title, prompt, difficulty, focus_tags, constraints, estimated_time_minutes, phase_time_minutes, rubric_hints, sample_solution_outline
-  - All JSON fields properly formatted and validated by SQLite CHECK constraints
-  - Successfully inserted seed data into database - verified 6 rows in problems table
-  - Tested query: all problems have correct difficulty levels and time allocations
+- Task 1.10: Tested basic routes work (can fetch problems)
+  - Started FastAPI server successfully with `uv run uvicorn app.main:app`
+  - Verified GET /api/problems returns all 6 problems with correct structure (id, slug, title, difficulty, focus_tags, estimated_time_minutes)
+  - Verified GET /api/problems/{id} returns full problem details including prompt, constraints, phase_time_minutes, rubric_hints, sample_solution_outline
+  - Tested with multiple problem IDs: url-shortener, spotify - all returned correct data
+  - Confirmed 404 error handling: GET /api/problems/nonexistent-problem returns {"detail":"Problem 'nonexistent-problem' not found"} with HTTP 404
+  - Verified all 6 problems accessible: 2 apprentice, 2 sorcerer, 2 archmage difficulty levels
+  - All Phase 1 tasks now complete - backend foundation is ready for Phase 2 (file upload)
 
 ## Completed Previously
 - Task 1.1: Updated pyproject.toml with correct dependencies
