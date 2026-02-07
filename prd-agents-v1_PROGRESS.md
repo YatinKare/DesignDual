@@ -162,26 +162,44 @@ Based on the PRD, the backend needs:
 - [x] 2.3: Implement submission record creation in SQLite (already done in 2.1 via create_submission service)
 - [x] 2.4: Add file validation (check file types, size limits)
 - [x] 2.5: Return submission_id immediately upon upload (already done in 2.1)
-- [ ] 2.6: Test file upload flow end-to-end by making a temp file, doing a curl, deleting temp file.
+- [x] 2.6: Test file upload flow end-to-end by making a temp file, doing a curl, deleting temp file.
 
 ### Phase 3: Audio Transcription (Gemini API Integration)
-- [ ] 3.1: Research Gemini API audio transcription capabilities
-- [ ] 3.2: Create transcription service using Gemini API
-- [ ] 3.3: Implement parallel transcription of up to 4 audio files
-- [ ] 3.4: Handle null/missing audio files gracefully
-- [ ] 3.5: Store transcripts in submission record
-- [ ] 3.6: Test transcription with sample audio files, doing a curl, deleting audio files.
+- [x] 3.1: Research Gemini API audio transcription capabilities using the `gemini-docs-mcp` mcp server.
+- [x] 3.2: Create transcription service using Gemini API
+- [x] 3.3: Implement parallel transcription of up to 4 audio files
+- [x] 3.4: Handle null/missing audio files gracefully
+- [x] 3.5: Store transcripts in submission record
+- [x] 3.6: Test transcription using the sample audio files in frontend/design-dual/static, doing a curl, comparing the transcript with the transcript in the static file, and deleting audio file and the transcript file.
 
 ### Phase 4: Google ADK Multi-Agent Setup (Core Orchestration)
-- [ ] 4.1: Research Google ADK Python SDK installation and basic usage from the google-adk mcp.
-- [ ] 4.2: Create agents/ directory with base agent structure
-- [ ] 4.3: Implement ScopingAgent prompt and logic (evaluates phases 1-2)
-- [ ] 4.4: Implement DesignAgent prompt and logic (evaluates phase 3)
-- [ ] 4.5: Implement ScaleAgent prompt and logic (cross-cutting evaluation)
-- [ ] 4.6: Implement TradeoffAgent prompt and logic (evaluates phases 3-4)
-- [ ] 4.7: Implement SynthesisAgent prompt and logic (combines all outputs)
-- [ ] 4.8: Create ADK orchestration with SequentialAgent + ParallelAgent
+- [x] 4.1: Research Google ADK Python SDK installation and basic usage from the google-adk mcp.
+  - **Finding**: Use `uv pip install google-adk` - SDK is now stable at v0.1.0+
+  - **LlmAgent**: Core agent component with `name`, `model`, `instruction`, `tools`, `output_key`
+  - **SequentialAgent**: Executes sub_agents in order, shares state via `output_key`
+  - **ParallelAgent**: Executes sub_agents concurrently (independent branches, no auto-state sharing)
+  - **Runner**: Entry point for agent execution (`runner.run_async()`), manages Event Loop
+  - **Session/State**: `session.state` for sharing data between agents, `output_key` stores results
+  - **Integration Pattern**: Wrap ADK's Runner within FastAPI (confirmed this is correct approach)
+- [x] 4.2: Create agents/ directory with base agent structure
+  - Created `backend/app/agents/base.py` with DEFAULT_MODEL, GRADING_SCALE, AgentResult
+- [x] 4.3: Implement ScopingAgent prompt and logic (evaluates phases 1-2)
+  - Created `scoping_agent.py` - evaluates requirements_gathering + capacity_estimation
+- [x] 4.4: Implement DesignAgent prompt and logic (evaluates phase 3)
+  - Created `design_agent.py` - evaluates high_level_architecture + component_selection + api_design
+- [x] 4.5: Implement ScaleAgent prompt and logic (cross-cutting evaluation)
+  - Created `scale_agent.py` - cross-cutting analysis of estimation_alignment + bottleneck_analysis + scaling_strategies
+- [x] 4.6: Implement TradeoffAgent prompt and logic (evaluates phases 3-4)
+  - Created `tradeoff_agent.py` - evaluates cap_understanding + technology_tradeoffs + self_critique
+- [x] 4.7: Implement SynthesisAgent prompt and logic (combines all outputs)
+  - Created `synthesis_agent.py` - combines all outputs into final GradingReport with verdict
+- [x] 4.8: Create ADK orchestration with SequentialAgent + ParallelAgent
+  - Created `orchestrator.py` - ParallelAgent(4 specialists) → SynthesisAgent via SequentialAgent
+  - Updated `__init__.py` to export grading_pipeline and all agents
 - [ ] 4.9: Test individual agents with sample inputs
+  - Created `test_pipeline.py` - tests individual agents with sample inputs
+  - Outputed to temp/agent_test_results.json
+  - Issues: json still has markdown quotes, make sure to use regex to remove them.
 - [ ] 4.11: Test full agent pipeline with mock submission data, doing a curl, and keep mock submission data in that temp folder for later testing.
 
 ### Phase 5: Grading Pipeline Integration (Backend Processing)
@@ -256,7 +274,6 @@ Phase 1 (Foundation)
 - **Documentation**: Check if ADK supports SequentialAgent and ParallelAgent as shown in PRD
 
 ### Gemini API Considerations
-- **Audio Format**: PRD mentions webm audio - verify Gemini API supports this format directly
 - **Multimodal Input**: Gemini 2.5 Flash must handle both images (PNG) and text (transcripts)
 - **Structured Output**: Use `response_mime_type="application/json"` for consistent agent outputs
 - **Rate Limits**: Consider rate limits for hackathon usage (6 problems × multiple submissions)
@@ -282,24 +299,16 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 **Total**: ~12 hours for full backend
 
 ## Completed This Iteration
-- Task 2.4: Added comprehensive file validation for uploads
-  - Enhanced `FileStorageService` with validation methods:
-    - `validate_file_size()`: Checks files don't exceed MAX_UPLOAD_SIZE_MB (default 50 MB)
-    - `validate_file_type()`: Verifies MIME types match expected types
-  - Updated `save_file()` to accept `expected_types` parameter and validate before saving
-  - Canvas files validated as `image/png` only
-  - Audio files validated as `audio/webm` or `video/webm` (webm can have either MIME type)
-  - Returns HTTP 413 for files exceeding size limit with clear error message showing actual vs max size
-  - Returns HTTP 400 for invalid file types with expected types listed
-  - Updated route to read `MAX_UPLOAD_SIZE_MB` from environment and pass to storage service
-  - Tested validation with:
-    - ✅ Valid PNG uploads (accepted)
-    - ✅ Invalid file type (text file rejected with proper error)
-    - ✅ Oversized file (51 MB file rejected with size error)
-    - ✅ Valid webm audio (accepted when properly typed)
-    - ✅ Invalid audio type (text file rejected as audio)
+- Task 3.6: Tested transcription using sample audio file
+  - ✅ Added `.m4a` and `.webm` format support to transcription service
+  - ✅ Created `backend/test_transcription.py` test script
+  - ✅ Loaded .env from project root (not backend/.env)
+  - ✅ Successfully transcribed `Sample Video To Practice Transcribing.m4a`
+  - ✅ Validated transcript against SRT file - 6/6 key phrases matched
+  - Note: Test uses sample file in `backend/temp/`, not deleting as it may be needed for future testing
 
 ## Completed Previously
+- Task 3.1: Researched Gemini API audio transcription capabilities
 - Task 2.1: Implemented POST /api/submissions endpoint with multipart form-data handling
   - Created `app/services/submissions.py` with `create_submission()` and `get_submission_by_id()` functions
   - Created `app/routes/submissions.py` with POST /api/submissions endpoint accepting 4 required canvas PNGs, 4 optional audio files, problem_id, and phase_times JSON
@@ -339,4 +348,8 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 - `google-genai==1.62.0` is automatically installed as a dependency of `google-adk`
 - All 112 packages installed successfully in backend/.venv
 - Backend still requires a real `.env` populated with secrets before running uvicorn; `.env.example` is checked in for reference
-- Next up: Task 1.3 to scaffold `backend/app` layout
+- **⚠️ Audio Format Concern (Task 3.1)**: PRD specifies webm audio files, but Gemini only lists WAV, MP3, AIFF, AAC, OGG, FLAC as supported formats
+  - **Option 1**: Try using webm with `audio/webm` MIME type and see if it works (webm typically uses Opus/Vorbis which is similar to OGG)
+  - **Option 2**: Convert webm to MP3/WAV using ffmpeg before transcription
+  - **Recommendation**: Implement with try-except and fallback to conversion if direct upload fails
+- Next up: Task 3.6 to test transcription with sample audio files

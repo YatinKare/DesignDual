@@ -2,7 +2,18 @@
 
 from .database import db_connection, get_db_connection
 from .problems import list_problem_summaries
-from .submissions import create_submission, get_submission_by_id
+from .submissions import (
+    create_submission,
+    get_submission_by_id,
+    update_submission_transcripts,
+    update_submission_status,
+)
+from .transcription import (
+    transcribe_audio,
+    transcribe_audio_bytes,
+    transcribe_audio_files_parallel,
+    is_supported_audio_format,
+)
 
 __all__ = [
     "db_connection",
@@ -10,4 +21,13 @@ __all__ = [
     "list_problem_summaries",
     "create_submission",
     "get_submission_by_id",
+    "update_submission_transcripts",
+    "update_submission_status",
+    "transcribe_audio",
+    "transcribe_audio_bytes",
+    "transcribe_audio_files_parallel",
+    "is_supported_audio_format",
 ]
+
+
+

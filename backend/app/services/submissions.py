@@ -121,4 +121,96 @@ async def get_submission_by_id(
     )
 
 
-__all__ = ["create_submission", "get_submission_by_id"]
+async def update_submission_transcripts(
+    connection: aiosqlite.Connection,
+    submission_id: str,
+    transcripts: Dict[PhaseName, Optional[str]],
+) -> bool:
+    """Update a submission's phase transcripts.
+
+    This function merges the provided transcripts into the existing phases JSON,
+    preserving canvas_path, audio_path, and other fields.
+
+    Args:
+        connection: Active database connection
+        submission_id: Submission ID to update
+        transcripts: Map of PhaseName to transcript text (None for phases without audio)
+
+    Returns:
+        True if the submission was updated, False if not found
+    """
+    # First fetch the current phases
+    cursor = await connection.execute(
+        "SELECT phases FROM submissions WHERE id = ?",
+        (submission_id,),
+    )
+    row = await cursor.fetchone()
+    await cursor.close()
+
+    if row is None:
+        return False
+
+    # Parse existing phases
+    phases_dict = json.loads(row["phases"] or "{}")
+
+    # Merge transcripts into existing phases
+    for phase, transcript in transcripts.items():
+        phase_key = phase.value
+        if phase_key not in phases_dict:
+            phases_dict[phase_key] = {}
+        phases_dict[phase_key]["transcript"] = transcript
+
+    # Update the submission
+    now = datetime.utcnow()
+    phases_json = json.dumps(phases_dict)
+
+    await connection.execute(
+        """
+        UPDATE submissions
+        SET phases = ?, status = ?, updated_at = ?
+        WHERE id = ?
+        """,
+        (phases_json, SubmissionStatus.TRANSCRIBING.value, now, submission_id),
+    )
+    await connection.commit()
+
+    return True
+
+
+async def update_submission_status(
+    connection: aiosqlite.Connection,
+    submission_id: str,
+    status: SubmissionStatus,
+) -> bool:
+    """Update a submission's status.
+
+    Args:
+        connection: Active database connection
+        submission_id: Submission ID to update
+        status: New status value
+
+    Returns:
+        True if the submission was updated, False if not found
+    """
+    now = datetime.utcnow()
+
+    cursor = await connection.execute(
+        """
+        UPDATE submissions
+        SET status = ?, updated_at = ?
+        WHERE id = ?
+        """,
+        (status.value, now, submission_id),
+    )
+    await connection.commit()
+
+    return cursor.rowcount > 0
+
+
+__all__ = [
+    "create_submission",
+    "get_submission_by_id",
+    "update_submission_transcripts",
+    "update_submission_status",
+]
+
