@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import aiosqlite
+from google.adk.sessions import BaseSessionService, Session
 
 from app.db import BACKEND_DIR, REPO_ROOT
 from app.models import PhaseName
@@ -19,6 +20,7 @@ PHASE_ORDER: tuple[PhaseName, ...] = (
     PhaseName.DESIGN,
     PhaseName.EXPLAIN,
 )
+DEFAULT_ADK_APP_NAME = "designdual-grading"
 
 
 def _resolve_artifact_path(path_value: str) -> Path:
@@ -108,4 +110,73 @@ async def build_submission_bundle(
     }
 
 
-__all__ = ["build_submission_bundle", "PHASE_ORDER"]
+def build_grading_session_state(
+    submission_bundle: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Build initial ADK session state from a submission bundle."""
+    return {
+        "submission_id": submission_bundle["submission_id"],
+        "problem": submission_bundle["problem"],
+        "phase_times": submission_bundle["phase_times"],
+        "phases": submission_bundle["phases"],
+        # Pre-seed expected agent output slots.
+        "scoping_result": None,
+        "design_result": None,
+        "scale_result": None,
+        "tradeoff_result": None,
+        "final_report": None,
+    }
+
+
+async def initialize_grading_session(
+    session_service: BaseSessionService,
+    submission_bundle: Dict[str, Any],
+    user_id: str,
+    app_name: str = DEFAULT_ADK_APP_NAME,
+    session_id: str | None = None,
+) -> Session:
+    """Create an ADK session initialized with grading state from submission data."""
+    resolved_session_id = session_id or str(submission_bundle["submission_id"])
+    return await session_service.create_session(
+        app_name=app_name,
+        user_id=user_id,
+        session_id=resolved_session_id,
+        state=build_grading_session_state(submission_bundle),
+    )
+
+
+async def delete_grading_session(
+    session_service: BaseSessionService,
+    user_id: str,
+    session_id: str,
+    app_name: str = DEFAULT_ADK_APP_NAME,
+) -> bool:
+    """Delete a grading session if it exists.
+
+    Returns:
+        True when a session was deleted, False when no matching session existed.
+    """
+    existing = await session_service.get_session(
+        app_name=app_name,
+        user_id=user_id,
+        session_id=session_id,
+    )
+    if existing is None:
+        return False
+
+    await session_service.delete_session(
+        app_name=app_name,
+        user_id=user_id,
+        session_id=session_id,
+    )
+    return True
+
+
+__all__ = [
+    "build_submission_bundle",
+    "build_grading_session_state",
+    "initialize_grading_session",
+    "delete_grading_session",
+    "PHASE_ORDER",
+    "DEFAULT_ADK_APP_NAME",
+]

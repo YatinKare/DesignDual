@@ -206,7 +206,7 @@ Based on the PRD, the backend needs:
 
 ### Phase 5: Grading Pipeline Integration (Backend Processing)
 - [x] 5.1: Create grading service that assembles submission bundle
-- [ ] 5.2: Implement ADK session state initialization from submission data and deletion (or temp use the adk docs mcp server to understand the documentation and best practices for this.)
+- [x] 5.2: Implement ADK session state initialization from submission data and deletion (or temp use the adk docs mcp server to understand the documentation and best practices for this.)
 - [ ] 5.3: Create background task for running grading pipeline
 - [ ] 5.4: Store grading results in database (grading_results table)
 - [ ] 5.5: Implement error handling for agent failures
@@ -383,3 +383,31 @@ IN_PROGRESS
 
 ### Notes
 - Per instruction, no new `prd-agents-*` markdown files were created; this iteration updated only the v1 progress markdown.
+
+## Iteration Update (Task 5.2)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 5.2: Implemented ADK session state initialization/deletion in grading service.
+  - Added `build_grading_session_state(submission_bundle)` in `backend/app/services/grading.py`.
+  - Added `initialize_grading_session(...)` to create a session with seeded state (`problem`, `phases`, `phase_times`, `submission_id`, and expected output slots).
+  - Added `delete_grading_session(...)` to safely delete session state after grading work is done.
+  - Added `DEFAULT_ADK_APP_NAME = "designdual-grading"` for consistent app/session scoping.
+  - Exported new helpers via `backend/app/services/__init__.py`.
+
+### MCP Research
+- Verified ADK session lifecycle and APIs via `adk-docs-mcp`:
+  - Session state should be initialized via `create_session(..., state=...)`.
+  - Cleanup should use `delete_session(app_name, user_id, session_id)` when the session is no longer needed.
+
+### Manual Validation
+- Ran manual pipeline simulation using real submission data from storage/DB:
+  - Built bundle for submission `36081f88-d0e0-4b2d-8071-6da870fe60bf`
+  - Created ADK in-memory session via `initialize_grading_session`
+  - Verified loaded state contains expected keys and 4 phases
+  - Deleted session via `delete_grading_session`
+  - Verified session no longer exists after delete
+- Compile validation:
+  - `uv run python -m py_compile app/services/grading.py`
