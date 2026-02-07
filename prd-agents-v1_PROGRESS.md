@@ -152,7 +152,7 @@ Based on the PRD, the backend needs:
 - [x] 1.5: Create SQLite database schema and initialization script
 - [x] 1.6: Create main.py FastAPI application with CORS middleware
 - [x] 1.7: Implement GET /api/problems endpoint (list all problems)
-- [ ] 1.8: Implement GET /api/problems/{id} endpoint (problem details)
+- [x] 1.8: Implement GET /api/problems/{id} endpoint (problem details)
 - [ ] 1.9: Create seed data for 6 system design problems
 - [ ] 1.10: Test basic routes work (can fetch problems)
 
@@ -299,6 +299,11 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
   - Added `app/main.py` to load `.env`, configure CORS from `FRONTEND_ORIGIN`, and expose `app` for uvicorn
 - Task 1.7: Implemented problem listing endpoint
   - Added `app/routes/problems.py` to fetch problem summaries from SQLite and wired the router into `app/main.py`
+- Task 1.8: Implemented problem detail endpoint
+  - Added `get_problem_by_id` service function to `app/services/problems.py` that fetches full Problem with all fields (prompt, constraints, rubric_hints, etc.)
+  - Added GET `/api/problems/{id}` route that returns 404 with proper error message if problem not found
+  - Tested endpoint with curl: returns empty array for list, 404 for nonexistent ID
+  - Created backend/.env from .env.example for testing
 
 ## Notes
 - The correct package for Google ADK is `google-adk`, not `google-adk-python` or just `google-genai`
