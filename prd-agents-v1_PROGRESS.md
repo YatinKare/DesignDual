@@ -257,7 +257,7 @@ Based on the PRD, the backend needs:
 - [x] 10.1: Document all API endpoints with example requests/responses
 - [x] 10.2: Test CORS configuration for frontend connection
 - [x] 10.3: Verify file upload size limits are appropriate
-- [ ] 10.4: Create Postman/Thunder Client collection for testing
+- [x] 10.4: Create Postman/Thunder Client collection for testing
 - [ ] 10.5: End-to-end test: upload submission → stream progress → fetch result via curl.
 
 ### Phase 11: Error Handling & Robustness
@@ -1916,3 +1916,37 @@ IN_PROGRESS
   - Completed (`[x]`): 71
   - Remaining (`[ ]`): 13
   - Status remains `IN_PROGRESS`.
+
+## Iteration Update (Task 10.4 - Sun Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 10.4: Created Postman collection for backend API testing.
+  - Added `backend/docs/DesignDual.postman_collection.json` (Postman Collection v2.1).
+  - Included requests for all implemented endpoints:
+    - `GET /api/problems`
+    - `GET /api/problems/{id}`
+    - `POST /api/submissions` (multipart/form-data with canvas/audio placeholders)
+    - `GET /api/submissions/{id}`
+    - `GET /api/submissions/{id}/stream` (SSE)
+    - `GET /api/dashboard`
+    - `GET /api/dashboard/history`
+    - `GET /api/dashboard/summary`
+  - Added collection variables (`baseUrl`, `problemId`, file path placeholders) and a test script to persist `submission_id` after create-submission.
+
+### Validation
+- Verified task was not already implemented before coding (no existing Postman/Thunder collection files found).
+- Collection JSON validation: `jq empty backend/docs/DesignDual.postman_collection.json` ✅
+- Manual runtime validation (non-unit) with live server and curl from `backend/`:
+  - `GET /api/problems` → `200` ✅
+  - `POST /api/submissions` with temp PNG files → returned `submission_id` ✅
+  - `GET /api/submissions/{id}/stream` → streamed SSE processing events ✅
+  - `GET /api/dashboard` → `200` ✅
+
+### Task Count Check
+- Total tasks in main Task List: 85
+- Marked complete `[x]`: 73
+- Remaining `[ ]`: 12
+- Status remains `IN_PROGRESS` because unchecked tasks remain.
