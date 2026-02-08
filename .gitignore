@@ -23,3 +23,10 @@ frontend/design-dual/vite.config.js.timestamp-*
 frontend/design-dual/vite.config.ts.timestamp-*
 # Playwright
 frontend/design-dual/test-results
+
+# Backend
+.env
+backend/data/
+backend/storage/
+
+__pycache__

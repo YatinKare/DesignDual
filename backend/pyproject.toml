@@ -1,7 +1,16 @@
 [project]
-name = "backend"
+name = "DesignDual"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI-powered system design interview grading platform with multi-agent evaluation"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "google-adk>=0.1.0",
+    "aiosqlite>=0.20.0",
+    "pydantic>=2.0.0",
+    "python-multipart>=0.0.12",
+    "sse-starlette>=2.0.0",
+    "python-dotenv>=1.0.0",
+]

@@ -1,0 +1,29 @@
+=== Submission Validation Tests ===
+Test run: Sat Feb  7 22:35:24 EST 2026
+
+=== Test files created ===
+
+Test 1: Invalid problem_id (should fail with 404)
+Response code: 404
+✅ PASS: Got expected 404 error for invalid problem_id
+
+Test 2: Missing phase in phase_times (should fail with 400)
+Response code: 400
+✅ PASS: Got expected 400 error for missing phase
+
+Test 3: Extra phase in phase_times (should fail with 400)
+Response code: 400
+✅ PASS: Got expected 400 error for extra phase
+
+Test 4: Empty canvas file (should fail with 400)
+Response code: 400
+✅ PASS: Got expected 400 error for empty canvas
+
+Test 5: Valid submission with all required fields (should succeed with 200)
+Response code: 200
+✅ PASS: Valid submission accepted
+Created submission: 
+
+=== Cleaning up ===
+
+=== Test Summary ===

@@ -1,0 +1,56 @@
+1
+00:00:01,360 --> 00:00:06,399
+<font color="white" size=".72c">hey there this is a</font>
+
+2
+00:00:03,120 --> 00:00:08,720
+<font color="white" size=".72c">quick and silly video to allow you to</font>
+
+3
+00:00:06,399 --> 00:00:10,320
+<font color="white" size=".72c">experiment a little bit with the process</font>
+
+4
+00:00:08,720 --> 00:00:12,639
+<font color="white" size=".72c">of transcription</font>
+
+5
+00:00:10,320 --> 00:00:13,440
+<font color="white" size=".72c">on youtube alls i'm looking for you to</font>
+
+6
+00:00:12,639 --> 00:00:16,239
+<font color="white" size=".72c">do here</font>
+
+7
+00:00:13,440 --> 00:00:17,199
+<font color="white" size=".72c">is to use the youtube tool to transcribe</font>
+
+8
+00:00:16,239 --> 00:00:19,600
+<font color="white" size=".72c">this message</font>
+
+9
+00:00:17,199 --> 00:00:20,720
+<font color="white" size=".72c">and then click sync and set the timing</font>
+
+10
+00:00:19,600 --> 00:00:23,359
+<font color="white" size=".72c">so you can get a</font>
+
+11
+00:00:20,720 --> 00:00:23,920
+<font color="white" size=".72c">quick idea about how the whole process</font>
+
+12
+00:00:23,359 --> 00:00:26,320
+<font color="white" size=".72c">works</font>
+
+13
+00:00:23,920 --> 00:00:30,480
+<font color="white" size=".72c">well this wraps up the video good luck</font>
+
+14
+00:00:26,320 --> 00:00:30,480
+<font color="white" size=".72c">and i will talk to you about it soon</font>
+

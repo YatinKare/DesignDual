@@ -1,0 +1,314 @@
+{
+  "info": {
+    "name": "DesignDual Backend API",
+    "_postman_id": "7f63d068-c501-4bde-90a4-20db7db32268",
+    "description": "Manual testing collection for DesignDual backend endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Problems",
+      "item": [
+        {
+          "name": "List Problems",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/problems",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "problems"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Problem By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/problems/{{problemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "problems",
+                "{{problemId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Submissions",
+      "item": [
+        {
+          "name": "Create Submission",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Submission accepted', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var json = pm.response.json();",
+                  "if (json && json.submission_id) {",
+                  "  pm.collectionVariables.set('submissionId', json.submission_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "problem_id",
+                  "value": "{{problemId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "phase_times",
+                  "value": "{\"clarify\":300,\"estimate\":180,\"design\":900,\"explain\":420}",
+                  "type": "text"
+                },
+                {
+                  "key": "canvas_clarify",
+                  "type": "file",
+                  "src": "{{canvasClarifyPath}}"
+                },
+                {
+                  "key": "canvas_estimate",
+                  "type": "file",
+                  "src": "{{canvasEstimatePath}}"
+                },
+                {
+                  "key": "canvas_design",
+                  "type": "file",
+                  "src": "{{canvasDesignPath}}"
+                },
+                {
+                  "key": "canvas_explain",
+                  "type": "file",
+                  "src": "{{canvasExplainPath}}"
+                },
+                {
+                  "key": "audio_clarify",
+                  "type": "file",
+                  "src": "{{audioClarifyPath}}",
+                  "disabled": true
+                },
+                {
+                  "key": "audio_estimate",
+                  "type": "file",
+                  "src": "{{audioEstimatePath}}",
+                  "disabled": true
+                },
+                {
+                  "key": "audio_design",
+                  "type": "file",
+                  "src": "{{audioDesignPath}}",
+                  "disabled": true
+                },
+                {
+                  "key": "audio_explain",
+                  "type": "file",
+                  "src": "{{audioExplainPath}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/submissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "submissions"
+              ]
+            },
+            "description": "Set local PNG paths in collection variables before running."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Submission Result",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/submissions/{{submissionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "submissions",
+                "{{submissionId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Stream Submission Progress (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/submissions/{{submissionId}}/stream",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "submissions",
+                "{{submissionId}}",
+                "stream"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "dashboard"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/history?limit={{historyLimit}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "{{historyLimit}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "dashboard",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "problemId",
+      "value": "url-shortener"
+    },
+    {
+      "key": "submissionId",
+      "value": ""
+    },
+    {
+      "key": "historyLimit",
+      "value": "10"
+    },
+    {
+      "key": "canvasClarifyPath",
+      "value": "/absolute/path/to/clarify.png"
+    },
+    {
+      "key": "canvasEstimatePath",
+      "value": "/absolute/path/to/estimate.png"
+    },
+    {
+      "key": "canvasDesignPath",
+      "value": "/absolute/path/to/design.png"
+    },
+    {
+      "key": "canvasExplainPath",
+      "value": "/absolute/path/to/explain.png"
+    },
+    {
+      "key": "audioClarifyPath",
+      "value": "/absolute/path/to/clarify.webm"
+    },
+    {
+      "key": "audioEstimatePath",
+      "value": "/absolute/path/to/estimate.webm"
+    },
+    {
+      "key": "audioDesignPath",
+      "value": "/absolute/path/to/design.webm"
+    },
+    {
+      "key": "audioExplainPath",
+      "value": "/absolute/path/to/explain.webm"
+    }
+  ]
+}
