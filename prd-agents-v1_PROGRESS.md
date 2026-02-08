@@ -208,7 +208,7 @@ Based on the PRD, the backend needs:
 - [x] 5.1: Create grading service that assembles submission bundle
 - [x] 5.2: Implement ADK session state initialization from submission data and deletion (or temp use the adk docs mcp server to understand the documentation and best practices for this.)
 - [x] 5.3: Create background task for running grading pipeline
-- [ ] 5.4: Store grading results in database (grading_results table)
+- [x] 5.4: Store grading results in database (grading_results table)
 - [ ] 5.5: Implement error handling for agent failures
 - [ ] 5.6: Test full grading pipeline with real submission via curl.
 
@@ -449,3 +449,36 @@ IN_PROGRESS
   - Verified session no longer exists after delete
 - Compile validation:
   - `uv run python -m py_compile app/services/grading.py`
+
+## Iteration Update (Task 5.4 - Sat Feb 7 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 5.4: Implemented grading result storage in database.
+  - Added `save_grading_result(connection, submission_id, grading_report)` function to persist grading results.
+  - Added `get_grading_result(connection, submission_id)` function to retrieve stored results.
+  - Updated `run_grading_pipeline_background()` to extract `final_report` from ADK session state after pipeline completion.
+  - Grading results are stored in `grading_results` table with all fields from `GradingReport` model:
+    - `overall_score` (float)
+    - `verdict` (enum value)
+    - `verdict_display` (human-readable string)
+    - `dimensions` (JSON with per-dimension scores and feedback)
+    - `top_improvements` (JSON array)
+    - `phase_observations` (JSON object mapping phases to observations)
+    - `raw_report` (full JSON dump of GradingReport)
+  - Used UPSERT (INSERT ... ON CONFLICT) pattern to allow re-grading of submissions.
+  - Added proper error handling with logging for grading result storage failures.
+  - Exported new functions via `app/services/__init__.py`.
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/services/grading.py` ✅
+- Import validation: `uv run python -c "from app.services.grading import save_grading_result, get_grading_result; print('Import successful')"` ✅
+- Compilation check: `uv run python -m compileall app/services/grading.py -q` ✅
+
+### Notes
+- The implementation extracts the final report from `session.state["final_report"]` after the agent pipeline completes.
+- If extraction or parsing fails, an error is logged but the submission status is still updated to COMPLETE.
+- The `raw_report` column stores the complete JSON representation for debugging and future schema migrations.
+- Next task (5.5) will focus on improving error handling for agent failures during execution.

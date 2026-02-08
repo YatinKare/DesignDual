@@ -14,7 +14,7 @@ from google.genai import types
 
 from app.agents import grading_pipeline
 from app.db import BACKEND_DIR, REPO_ROOT
-from app.models import PhaseName, SubmissionStatus
+from app.models import GradingReport, PhaseName, SubmissionStatus
 from app.services.database import get_db_connection
 from app.services.problems import get_problem_by_id
 from app.services.submissions import (
@@ -215,6 +215,101 @@ async def delete_grading_session(
     return True
 
 
+async def save_grading_result(
+    connection: aiosqlite.Connection,
+    submission_id: str,
+    grading_report: GradingReport,
+) -> None:
+    """Store the grading result in the database.
+
+    Args:
+        connection: Active database connection.
+        submission_id: ID of the submission being graded.
+        grading_report: The final grading report from the agent pipeline.
+
+    Raises:
+        ValueError: If grading_report is invalid or submission_id doesn't exist.
+    """
+    import json
+
+    # Convert the grading report to JSON for storage
+    dimensions_json = json.dumps(
+        {k.value: v.model_dump(mode="json") for k, v in grading_report.dimensions.items()}
+    )
+    top_improvements_json = json.dumps(grading_report.top_improvements)
+    phase_observations_json = json.dumps(
+        {k.value: v for k, v in grading_report.phase_observations.items()}
+    )
+    raw_report_json = grading_report.model_dump_json()
+
+    await connection.execute(
+        """
+        INSERT INTO grading_results (
+            submission_id,
+            overall_score,
+            verdict,
+            verdict_display,
+            dimensions,
+            top_improvements,
+            phase_observations,
+            raw_report,
+            created_at,
+            updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (submission_id) DO UPDATE SET
+            overall_score = excluded.overall_score,
+            verdict = excluded.verdict,
+            verdict_display = excluded.verdict_display,
+            dimensions = excluded.dimensions,
+            top_improvements = excluded.top_improvements,
+            phase_observations = excluded.phase_observations,
+            raw_report = excluded.raw_report,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (
+            submission_id,
+            grading_report.overall_score,
+            grading_report.verdict.value,
+            grading_report.verdict_display,
+            dimensions_json,
+            top_improvements_json,
+            phase_observations_json,
+            raw_report_json,
+        ),
+    )
+    await connection.commit()
+
+
+async def get_grading_result(
+    connection: aiosqlite.Connection,
+    submission_id: str,
+) -> GradingReport | None:
+    """Retrieve the grading result for a submission.
+
+    Args:
+        connection: Active database connection.
+        submission_id: ID of the submission.
+
+    Returns:
+        GradingReport if found, None otherwise.
+    """
+    import json
+
+    cursor = await connection.execute(
+        """
+        SELECT raw_report
+        FROM grading_results
+        WHERE submission_id = ?
+        """,
+        (submission_id,),
+    )
+    row = await cursor.fetchone()
+    if row is None:
+        return None
+
+    return GradingReport.model_validate_json(row[0])
+
+
 async def run_grading_pipeline_background(submission_id: str) -> None:
     """Run transcription + grading asynchronously for a submission."""
     connection = await get_db_connection()
@@ -266,6 +361,27 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
         ):
             pass
 
+        # Retrieve the final grading report from session state
+        final_session = await runner.session_service.get_session(
+            app_name=DEFAULT_ADK_APP_NAME,
+            user_id=user_id,
+            session_id=session.id,
+        )
+
+        if final_session and final_session.state.get("final_report"):
+            try:
+                # Parse the final report into a GradingReport object
+                final_report_data = final_session.state["final_report"]
+                grading_report = GradingReport.model_validate(final_report_data)
+
+                # Save to database
+                await save_grading_result(connection, submission_id, grading_report)
+                LOGGER.info("Saved grading result for submission %s", submission_id)
+            except Exception:
+                LOGGER.exception(
+                    "Failed to save grading result for submission %s", submission_id
+                )
+
         await update_submission_status(connection, submission_id, SubmissionStatus.COMPLETE)
     except Exception:
         LOGGER.exception("Background grading failed for submission %s", submission_id)
@@ -284,6 +400,8 @@ __all__ = [
     "build_grading_session_state",
     "initialize_grading_session",
     "delete_grading_session",
+    "save_grading_result",
+    "get_grading_result",
     "run_grading_pipeline_background",
     "PHASE_ORDER",
     "DEFAULT_ADK_APP_NAME",
