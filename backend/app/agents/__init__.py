@@ -17,6 +17,9 @@ from .phase_agents import (
     create_explain_phase_agent,
 )
 
+# Synthesis agents (v2)
+from .rubric_radar_agent import create_rubric_radar_agent
+
 __all__ = [
     # Pipeline and orchestrators (v1)
     "grading_pipeline",
@@ -34,6 +37,8 @@ __all__ = [
     "create_estimate_phase_agent",
     "create_design_phase_agent",
     "create_explain_phase_agent",
+    # Synthesis agents (v2)
+    "create_rubric_radar_agent",
     # Utilities
     "AgentResult",
     "DEFAULT_MODEL",

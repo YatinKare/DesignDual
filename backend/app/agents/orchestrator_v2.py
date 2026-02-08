@@ -24,6 +24,7 @@ from .phase_agents import (
     create_estimate_phase_agent,
     create_explain_phase_agent,
 )
+from .rubric_radar_agent import create_rubric_radar_agent
 
 
 def create_grading_pipeline_v2() -> SequentialAgent:
@@ -47,8 +48,8 @@ def create_grading_pipeline_v2() -> SequentialAgent:
             - phase:design: PhaseAgentOutput for design phase
             - phase:explain: PhaseAgentOutput for explain phase
 
-        Future (not yet implemented):
-            - rubric_radar: RubricRadarAgent output (rubric items, radar, verdict)
+        Future outputs (partially implemented):
+            - rubric_radar: RubricRadarAgent output (rubric items, radar, verdict) - ✅ IMPLEMENTED
             - plan_outline: PlanOutlineAgent output (next_attempt_plan, follow_up_questions, reference)
             - final_report_v2: FinalAssemblerV2 output (complete SubmissionResultV2)
     """
@@ -71,15 +72,20 @@ def create_grading_pipeline_v2() -> SequentialAgent:
         ],
     )
 
+    # Create synthesis agents
+    rubric_radar_agent = create_rubric_radar_agent()
+
     # SequentialAgent: Orchestrates the full v2 pipeline
-    # Currently only runs the parallel phase agents
-    # Future: Will add RubricRadarAgent → PlanOutlineAgent → FinalAssemblerV2
+    # Step 1: Run all 4 phase agents in parallel
+    # Step 2: Compute rubric, radar, overall score, and verdict
+    # Step 3 (future): Generate next_attempt_plan and follow_up_questions
+    # Step 4 (future): Assemble final SubmissionResultV2
     grading_pipeline_v2 = SequentialAgent(
         name="GradingPipelineV2",
-        description="Full v2 grading pipeline: 4 phase agents in parallel, then synthesis (future)",
+        description="Full v2 grading pipeline: phase agents → rubric/radar → plan/outline → final assembly",
         sub_agents=[
             phase_evaluation_panel,
-            # TODO (task 7.3): Add RubricRadarAgent here
+            rubric_radar_agent,  # ✅ Task 7.3 complete
             # TODO (task 7.4): Add PlanOutlineAgent here
             # TODO (task 7.5): Add FinalAssemblerV2 here
         ],

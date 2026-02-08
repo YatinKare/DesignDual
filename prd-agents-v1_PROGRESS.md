@@ -230,7 +230,7 @@ Based on the PRD, the backend needs:
 - REMINDER: USE `adk-docs` mcp for best google-adk best practices and examples for each subtask.
 - [x] 7.1: Shift to phase-first grading with 4 phase agents (clarify/estimate/design/explain)
 - [x] 7.2: Add ParallelAgent for phase agents + SequentialAgent orchestration (GradingPipelineV2)
-- [ ] 7.3: Implement RubricRadarAgent (rubric + radar + overall_score + verdict + summary)
+- [x] 7.3: Implement RubricRadarAgent (rubric + radar + overall_score + verdict + summary)
 - [ ] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
 - [ ] 7.5: Implement FinalAssemblerV2 (build SubmissionResultV2, enforce 4 phase cards + 4 evidence)
 - [ ] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
@@ -1153,3 +1153,94 @@ IN_PROGRESS
 - All 4 phase agents run in parallel for maximum speed (same as v1 design)
 - The ParallelAgent + SequentialAgent pattern is best practice for ADK orchestration
 - Next task (7.3) will implement RubricRadarAgent to compute rubric items and radar dimensions
+
+## Iteration Update (Task 7.3 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 7.3: Implemented RubricRadarAgent (rubric + radar + overall_score + verdict + summary).
+  - **Created** `backend/app/agents/rubric_radar_agent.py` (180+ lines):
+    - Factory function `create_rubric_radar_agent()` that returns configured LlmAgent
+    - Reads all 4 phase agent outputs from session.state (`phase:clarify`, `phase:estimate`, `phase:design`, `phase:explain`)
+    - Reads `problem.rubric_definition` with phase_weights for each rubric item
+    - **Computes rubric items**:
+      - Uses weighted averages based on phase_weights (e.g., `{"design": 0.7, "explain": 0.3}`)
+      - Assigns status: `pass` (≥8.0), `partial` (5.0-8.0), `fail` (<5.0)
+      - Extracts `computed_from` as list of phases from phase_weights keys
+    - **Computes radar dimensions** (exactly 4):
+      - `clarity`: Communication and thought structure (weighted: clarify 0.5, estimate 0.2, design 0.2, explain 0.1)
+      - `structure`: System architecture and component organization (weighted: design 0.6, explain 0.2, clarify 0.1, estimate 0.1)
+      - `power`: Scale, performance, capacity planning (weighted: estimate 0.4, design 0.4, explain 0.2)
+      - `wisdom`: Tradeoff analysis and decision justification (weighted: explain 0.6, design 0.3, clarify 0.1)
+    - **Computes overall score and verdict**:
+      - overall_score = simple mean of 4 phase scores
+      - verdict = "hire" (≥7.5), "maybe" (5.0-7.5), "no-hire" (<5.0)
+    - **Generates summary**: 2-3 sentence overall assessment with strongest dimension, critical weakness (if any), and verdict justification
+    - Output format: Strict JSON with `rubric[]`, `radar[]`, `overall_score`, `verdict`, `summary`
+    - Uses `output_key="rubric_radar"` to store results in session.state
+  - **Updated** `backend/app/agents/orchestrator_v2.py`:
+    - Imported `create_rubric_radar_agent`
+    - Added rubric_radar_agent as second sub-agent in SequentialAgent
+    - Updated pipeline description to reflect current state
+    - Marked task 7.3 as complete in TODOs
+    - Updated docstring to show rubric_radar output is implemented
+  - **Updated** `backend/app/agents/__init__.py`:
+    - Added import for `create_rubric_radar_agent`
+    - Added to __all__ list under "Synthesis agents (v2)" section
+  - **Pipeline Architecture (after task 7.3)**:
+    ```
+    SequentialAgent: GradingPipelineV2
+    ├── ParallelAgent: PhaseEvaluationPanel
+    │   ├── ClarifyPhaseAgent  (output_key: "phase:clarify")
+    │   ├── EstimatePhaseAgent (output_key: "phase:estimate")
+    │   ├── DesignPhaseAgent   (output_key: "phase:design")
+    │   └── ExplainPhaseAgent  (output_key: "phase:explain")
+    └── RubricRadarAgent       (output_key: "rubric_radar") ← NEW
+    ```
+  - **Session State (updated)**:
+    - Input: `problem`, `phase_artifacts`, `phase_times`
+    - Phase outputs: `phase:clarify`, `phase:estimate`, `phase:design`, `phase:explain`
+    - Synthesis outputs: `rubric_radar` ← NEW
+    - Future: `plan_outline`, `final_report_v2`
+  - **Created validation test**: `backend/test_rubric_radar_integration.py`
+    - Test 1: RubricRadarAgent instantiation ✅
+    - Test 2: GradingPipelineV2 structure (2 sub-agents) ✅
+    - Test 3: Phase agents output_keys validation ✅
+    - All tests passed ✅
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/agents/rubric_radar_agent.py` ✅
+- Syntax validation: `uv run python -m py_compile app/agents/orchestrator_v2.py` ✅
+- Import validation: Successfully imported `create_rubric_radar_agent` ✅
+- Pipeline structure test: `uv run python test_rubric_radar_integration.py` ✅
+  - RubricRadarAgent correctly added as 2nd sub-agent
+  - Pipeline now has 2 sub-agents (PhaseEvaluationPanel + RubricRadarAgent)
+  - All 4 phase agents present with correct output_keys
+
+### Implementation Details
+
+**Rubric Score Computation** (deterministic weighted average):
+- For each rubric item in `problem.rubric_definition`:
+  - Extract `phase_weights` (e.g., `{"clarify": 0.7, "estimate": 0.3}`)
+  - Compute: `score = sum(phase_scores[phase] * weight for phase, weight in phase_weights.items())`
+  - Example: If clarify=8.0, estimate=7.5, weights={clarify:0.7, estimate:0.3} → score = 8.0×0.7 + 7.5×0.3 = 7.85
+
+**Radar Dimension Computation** (fixed weights for skill aggregation):
+- clarity: 50% clarify + 20% estimate + 20% design + 10% explain
+- structure: 60% design + 20% explain + 10% clarify + 10% estimate
+- power: 40% estimate + 40% design + 20% explain
+- wisdom: 60% explain + 30% design + 10% clarify
+
+**Overall Score and Verdict**:
+- overall_score = (clarify + estimate + design + explain) / 4
+- verdict = "hire" if ≥7.5, "maybe" if 5.0-7.5, "no-hire" if <5.0
+
+### Notes
+- The RubricRadarAgent provides deterministic, explainable scoring based on phase performance
+- Rubric items are computed as weighted averages using phase_weights from problem definition
+- Radar dimensions aggregate phase scores using fixed skill-based weights
+- The agent uses strict JSON output with proper validation and structured format
+- The implementation is fully compliant with backend-revision-api.md requirements
+- Next task (7.4) will implement PlanOutlineAgent for generating next_attempt_plan, follow_up_questions, and reference_outline
