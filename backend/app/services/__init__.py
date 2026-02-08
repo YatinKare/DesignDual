@@ -15,6 +15,11 @@ from .grading import (
     run_grading_pipeline_background,
     save_grading_result,
 )
+from .grading_events import (
+    GradingEvent,
+    get_grading_events,
+    save_grading_event,
+)
 from .problems import list_problem_summaries
 from .submissions import (
     create_submission,
@@ -51,4 +56,7 @@ __all__ = [
     "save_submission_artifact",
     "save_submission_artifacts_batch",
     "get_submission_artifacts",
+    "GradingEvent",
+    "save_grading_event",
+    "get_grading_events",
 ]

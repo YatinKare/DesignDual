@@ -16,7 +16,9 @@ from google.genai import types
 from app.agents import grading_pipeline
 from app.db import BACKEND_DIR, REPO_ROOT
 from app.models import GradingReport, PhaseName, SubmissionStatus
+from app.models.contract_v2 import StreamStatus
 from app.services.database import get_db_connection
+from app.services.grading_events import save_grading_event
 from app.services.problems import get_problem_by_id
 from app.services.submissions import (
     get_submission_by_id,
@@ -37,6 +39,22 @@ LOGGER = logging.getLogger(__name__)
 # Timeout settings for grading pipeline
 GRADING_PIPELINE_TIMEOUT_SECONDS = 300  # 5 minutes max for entire agent pipeline
 TRANSCRIPTION_TIMEOUT_SECONDS = 120  # 2 minutes max for audio transcription
+
+# Phase-specific magical messages for SSE events
+PHASE_MESSAGES = {
+    PhaseName.CLARIFY: "The Clarification Sage examines your problem understanding...",
+    PhaseName.ESTIMATE: "The Estimation Oracle calculates your capacity planning...",
+    PhaseName.DESIGN: "The Architecture Archmage studies your system blueprint...",
+    PhaseName.EXPLAIN: "The Wisdom Keeper weighs your reasoning and tradeoffs...",
+}
+
+# Progress checkpoints for phases (phases run in parallel, so these are approximate)
+PHASE_PROGRESS = {
+    PhaseName.CLARIFY: 0.3,
+    PhaseName.ESTIMATE: 0.4,
+    PhaseName.DESIGN: 0.5,
+    PhaseName.EXPLAIN: 0.6,
+}
 
 
 def _resolve_artifact_path(path_value: str) -> Path:
@@ -439,6 +457,13 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
             submission_id,
             SubmissionStatus.PROCESSING,
         )
+        await save_grading_event(
+            connection,
+            submission_id,
+            StreamStatus.PROCESSING,
+            "Your spell has been submitted to the Council...",
+            progress=0.0,
+        )
         LOGGER.info("Started processing submission %s", submission_id)
 
         # Phase 1: Transcription
@@ -447,6 +472,15 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
                 connection,
                 submission_id,
                 SubmissionStatus.TRANSCRIBING,
+            )
+            # Continue using PROCESSING status for transcription sub-step
+            # (transcription is preparatory work, not a distinct phase)
+            await save_grading_event(
+                connection,
+                submission_id,
+                StreamStatus.PROCESSING,
+                "Deciphering your spoken incantations...",
+                progress=0.1,
             )
 
             audio_paths = [
@@ -474,6 +508,14 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
                 phase: transcripts[index] for index, phase in enumerate(PHASE_ORDER)
             }
             await update_submission_transcripts(connection, submission_id, transcript_map)
+            # Transcription complete - remain in PROCESSING status
+            await save_grading_event(
+                connection,
+                submission_id,
+                StreamStatus.PROCESSING,
+                "Transcription complete. The Council begins evaluation...",
+                progress=0.2,
+            )
             LOGGER.info("Transcription completed for submission %s", submission_id)
         except Exception as e:
             LOGGER.exception("Transcription failed for submission %s", submission_id)
@@ -483,6 +525,7 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
         try:
             await update_submission_status(connection, submission_id, SubmissionStatus.GRADING)
 
+            # Build bundle and initialize runner BEFORE emitting phase events
             submission_bundle = await build_submission_bundle(connection, submission_id)
             runner = InMemoryRunner(agent=grading_pipeline, app_name=DEFAULT_ADK_APP_NAME)
             user_id = f"submission-{submission_id}"
@@ -503,6 +546,20 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
                 role="user",
                 parts=[types.Part(text=input_text)],
             )
+
+            # Emit phase events sequentially with proper status transitions
+            # Note: Even though agents run in parallel via ParallelAgent,
+            # we emit events sequentially to create a smooth SSE stream experience
+            for phase in PHASE_ORDER:
+                stream_status = StreamStatus(phase.value)  # StreamStatus enum matches phase names
+                await save_grading_event(
+                    connection,
+                    submission_id,
+                    stream_status,
+                    PHASE_MESSAGES[phase],
+                    phase=phase,
+                    progress=PHASE_PROGRESS[phase],
+                )
 
             # Run agent pipeline - this executes all agents sequentially/parallel
             event_count = 0
@@ -551,6 +608,15 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
                 "Agent pipeline completed for submission %s with %d events",
                 submission_id,
                 event_count,
+            )
+
+            # Emit synthesizing event after all phase agents complete
+            await save_grading_event(
+                connection,
+                submission_id,
+                StreamStatus.SYNTHESIZING,
+                "The Council deliberates and forges the final verdict...",
+                progress=0.85,
             )
 
         except Exception as e:
@@ -627,8 +693,15 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
             LOGGER.exception("Result extraction/persistence failed for submission %s", submission_id)
             raise ValueError(f"Result persistence failed: {e}") from e
 
-        # Mark submission as complete
+        # Mark submission as complete with final event
         await update_submission_status(connection, submission_id, SubmissionStatus.COMPLETE)
+        await save_grading_event(
+            connection,
+            submission_id,
+            StreamStatus.COMPLETE,
+            "The verdict is sealed. View your complete evaluation.",
+            progress=1.0,
+        )
         LOGGER.info("Grading completed successfully for submission %s", submission_id)
 
     except Exception as outer_exception:
@@ -636,6 +709,13 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
         LOGGER.exception("Background grading failed for submission %s: %s", submission_id, outer_exception)
         try:
             await update_submission_status(connection, submission_id, SubmissionStatus.FAILED)
+            await save_grading_event(
+                connection,
+                submission_id,
+                StreamStatus.FAILED,
+                f"Grading failed: {str(outer_exception)[:200]}",
+                progress=None,
+            )
         except Exception as status_update_error:
             # Even if we can't update status, log the error
             LOGGER.exception(
