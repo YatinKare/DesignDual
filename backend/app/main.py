@@ -12,9 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes import problems_router, submissions_router
 
-# Load .env from backend directory (where the backend code lives)
+# Load .env from project root first (contains GOOGLE_API_KEY and other secrets),
+# then backend/.env for backend-specific config (override=False keeps root values).
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(BACKEND_ROOT / ".env")
+PROJECT_ROOT = BACKEND_ROOT.parent
+load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(BACKEND_ROOT / ".env", override=False)
 
 
 def _parse_origins(raw_value: str | None) -> List[str]:

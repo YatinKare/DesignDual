@@ -65,6 +65,68 @@ def _read_file_as_base64(file_path: Path) -> str:
     return base64.b64encode(file_path.read_bytes()).decode("utf-8")
 
 
+def _normalize_agent_report(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize raw agent output to match GradingReport schema.
+
+    Handles two mismatches between agent output and Pydantic model:
+    1. Verdict is uppercase (HIRE) but enum expects lowercase (hire).
+    2. Dimensions use sub-dimension keys (requirements_gathering, etc.)
+       but the model expects 4 top-level keys (scoping, design, scale, tradeoff).
+    """
+    # Map sub-dimensions to their parent dimension
+    SUB_TO_PARENT = {
+        "requirements_gathering": "scoping",
+        "capacity_estimation": "scoping",
+        "high_level_architecture": "design",
+        "component_selection": "design",
+        "api_design": "design",
+        "estimation_alignment": "scale",
+        "bottleneck_analysis": "scale",
+        "scaling_strategies": "scale",
+        "cap_understanding": "tradeoff",
+        "technology_tradeoffs": "tradeoff",
+        "self_critique": "tradeoff",
+    }
+
+    # 1. Lowercase the verdict
+    if "verdict" in data and isinstance(data["verdict"], str):
+        data["verdict"] = data["verdict"].lower()
+        # Map NO_HIRE -> no_hire etc. (already lowercased)
+
+    # 2. Collapse sub-dimensions into parent dimensions
+    raw_dims = data.get("dimensions", {})
+    needs_collapse = any(key in SUB_TO_PARENT for key in raw_dims)
+
+    if needs_collapse:
+        parent_buckets: Dict[str, list] = {}
+        for sub_key, sub_val in raw_dims.items():
+            parent = SUB_TO_PARENT.get(sub_key, sub_key)
+            parent_buckets.setdefault(parent, []).append(sub_val)
+
+        collapsed: Dict[str, Any] = {}
+        for parent, entries in parent_buckets.items():
+            scores = [e.get("score", 0) for e in entries if isinstance(e, dict)]
+            avg_score = sum(scores) / len(scores) if scores else 0
+            all_strengths = []
+            all_weaknesses = []
+            feedbacks = []
+            for e in entries:
+                if isinstance(e, dict):
+                    all_strengths.extend(e.get("strengths", []))
+                    all_weaknesses.extend(e.get("weaknesses", []))
+                    if e.get("feedback"):
+                        feedbacks.append(e["feedback"])
+            collapsed[parent] = {
+                "score": round(avg_score, 1),
+                "feedback": " ".join(feedbacks),
+                "strengths": all_strengths,
+                "weaknesses": all_weaknesses,
+            }
+        data["dimensions"] = collapsed
+
+    return data
+
+
 def _validate_agent_results(session_state: Dict[str, Any], submission_id: str) -> None:
     """Validate that all required agent results are present in session state.
 
@@ -524,8 +586,21 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
                 )
                 raise ValueError("Agent pipeline completed but produced no final report")
 
-            # Parse the final report into a GradingReport object
+            # Parse the final report into a GradingReport object.
+            # ADK output_key stores the LLM response as a string, so we may
+            # need to parse JSON first.
             final_report_data = final_session.state["final_report"]
+            if isinstance(final_report_data, str):
+                import json as _json
+                import re as _re
+                # Strip markdown code fences if present (```json ... ```)
+                cleaned = _re.sub(r"^```(?:json)?\s*", "", final_report_data.strip())
+                cleaned = _re.sub(r"\s*```$", "", cleaned)
+                final_report_data = _json.loads(cleaned)
+
+            # Normalize agent output to match our Pydantic schema:
+            final_report_data = _normalize_agent_report(final_report_data)
+
             try:
                 grading_report = GradingReport.model_validate(final_report_data)
             except Exception as e:
