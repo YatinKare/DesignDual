@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from google.adk.agents import ParallelAgent, SequentialAgent
 
+from .final_assembler_v2 import create_final_assembler_v2
 from .phase_agents import (
     create_clarify_phase_agent,
     create_design_phase_agent,
@@ -49,10 +50,10 @@ def create_grading_pipeline_v2() -> SequentialAgent:
             - phase:design: PhaseAgentOutput for design phase
             - phase:explain: PhaseAgentOutput for explain phase
 
-        Future outputs (partially implemented):
+        Synthesis outputs (all implemented):
             - rubric_radar: RubricRadarAgent output (rubric items, radar, verdict) - ✅ IMPLEMENTED
             - plan_outline: PlanOutlineAgent output (next_attempt_plan, follow_up_questions, reference) - ✅ IMPLEMENTED
-            - final_report_v2: FinalAssemblerV2 output (complete SubmissionResultV2)
+            - final_report_v2: FinalAssemblerV2 output (complete SubmissionResultV2) - ✅ IMPLEMENTED
     """
     # Create the 4 phase agents
     clarify_agent = create_clarify_phase_agent()
@@ -76,12 +77,13 @@ def create_grading_pipeline_v2() -> SequentialAgent:
     # Create synthesis agents
     rubric_radar_agent = create_rubric_radar_agent()
     plan_outline_agent = create_plan_outline_agent()
+    final_assembler = create_final_assembler_v2()
 
     # SequentialAgent: Orchestrates the full v2 pipeline
     # Step 1: Run all 4 phase agents in parallel
     # Step 2: Compute rubric, radar, overall score, and verdict
     # Step 3: Generate next_attempt_plan, follow_up_questions, and reference_outline
-    # Step 4 (future): Assemble final SubmissionResultV2
+    # Step 4: Assemble final SubmissionResultV2
     grading_pipeline_v2 = SequentialAgent(
         name="GradingPipelineV2",
         description="Full v2 grading pipeline: phase agents → rubric/radar → plan/outline → final assembly",
@@ -89,7 +91,7 @@ def create_grading_pipeline_v2() -> SequentialAgent:
             phase_evaluation_panel,
             rubric_radar_agent,  # ✅ Task 7.3 complete
             plan_outline_agent,  # ✅ Task 7.4 complete
-            # TODO (task 7.5): Add FinalAssemblerV2 here
+            final_assembler,  # ✅ Task 7.5 complete
         ],
     )
 

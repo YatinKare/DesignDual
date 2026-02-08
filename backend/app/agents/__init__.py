@@ -18,6 +18,7 @@ from .phase_agents import (
 )
 
 # Synthesis agents (v2)
+from .final_assembler_v2 import create_final_assembler_v2
 from .plan_outline_agent import create_plan_outline_agent
 from .rubric_radar_agent import create_rubric_radar_agent
 
@@ -41,6 +42,7 @@ __all__ = [
     # Synthesis agents (v2)
     "create_rubric_radar_agent",
     "create_plan_outline_agent",
+    "create_final_assembler_v2",
     # Utilities
     "AgentResult",
     "DEFAULT_MODEL",
