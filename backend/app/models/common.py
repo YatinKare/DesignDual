@@ -36,7 +36,8 @@ class DimensionName(str, Enum):
 class SubmissionStatus(str, Enum):
     """Lifecycle states for a submission as it moves through the pipeline."""
 
-    RECEIVED = "received"
+    QUEUED = "queued"
+    PROCESSING = "processing"
     TRANSCRIBING = "transcribing"
     GRADING = "grading"
     COMPLETE = "complete"

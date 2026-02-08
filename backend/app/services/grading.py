@@ -433,6 +433,14 @@ async def run_grading_pipeline_background(submission_id: str) -> None:
             LOGGER.error("Submission not found for background grading: %s", submission_id)
             return
 
+        # Transition from QUEUED → PROCESSING
+        await update_submission_status(
+            connection,
+            submission_id,
+            SubmissionStatus.PROCESSING,
+        )
+        LOGGER.info("Started processing submission %s", submission_id)
+
         # Phase 1: Transcription
         try:
             await update_submission_status(

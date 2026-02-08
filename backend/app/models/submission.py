@@ -36,7 +36,7 @@ class Submission(APISchema):
 
     id: str
     problem_id: str
-    status: SubmissionStatus = SubmissionStatus.RECEIVED
+    status: SubmissionStatus = SubmissionStatus.QUEUED
     created_at: datetime
     updated_at: datetime
     phase_times: Dict[PhaseName, int] = Field(

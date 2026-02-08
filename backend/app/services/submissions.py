@@ -53,7 +53,7 @@ async def create_submission(
         (
             submission_id,
             problem_id,
-            SubmissionStatus.RECEIVED.value,
+            SubmissionStatus.QUEUED.value,
             phase_times_json,
             phases_json,
             now,
@@ -65,7 +65,7 @@ async def create_submission(
     return Submission(
         id=submission_id,
         problem_id=problem_id,
-        status=SubmissionStatus.RECEIVED,
+        status=SubmissionStatus.QUEUED,
         created_at=now,
         updated_at=now,
         phase_times=phase_times,

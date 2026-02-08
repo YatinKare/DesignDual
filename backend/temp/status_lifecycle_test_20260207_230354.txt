@@ -1,0 +1,30 @@
+=== Submission Status Lifecycle Test (Task 6.6) ===
+
+Starting server...
+Server PID: 77033
+Creating test files...
+
+Submitting test submission...
+Response: {"submission_id":"e32c615d-d303-46d9-b7a7-5e4a6039d17c"}
+✅ Submission created: e32c615d-d303-46d9-b7a7-5e4a6039d17c
+
+Checking initial status (expecting QUEUED)...
+Initial status: grading
+❌ Initial status is grading (expected: queued)
+
+Monitoring status transitions...
+[23:04:02] Status: grading
+[23:04:44] Status: complete
+
+Final status: complete
+
+=== Validation ===
+Current status: complete
+❌ Lifecycle did NOT start with QUEUED
+✅ Lifecycle reached terminal state: complete
+
+Cleaning up...
+
+Test output saved to: /Users/yatink/Documents/GitHub/DesignDual-backend/backend/temp/status_lifecycle_test_20260207_230354.txt
+
+=== Test Complete ===

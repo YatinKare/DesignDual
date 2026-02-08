@@ -1,13 +1,7 @@
-INFO:     Started server process [66189]
+INFO:     Started server process [77038]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:51284 - "GET /api/problems HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51286 - "GET /api/problems HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51288 - "POST /api/submissions HTTP/1.1" 200 OK
-Invalid agent result type for scoping_result in submission b5bd9825-5c43-497c-885d-7903e63b502b: str
-Intermediate agent validation failed for submission b5bd9825-5c43-497c-885d-7903e63b502b: Agent result 'scoping_result' is invalid: expected dict, got str
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [66189]
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:55015 - "POST /api/submissions HTTP/1.1" 200 OK
+Invalid agent result type for scoping_result in submission e32c615d-d303-46d9-b7a7-5e4a6039d17c: str
+Intermediate agent validation failed for submission e32c615d-d303-46d9-b7a7-5e4a6039d17c: Agent result 'scoping_result' is invalid: expected dict, got str
