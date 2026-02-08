@@ -251,7 +251,7 @@ Based on the PRD, the backend needs:
 - [x] 9.1: Implement GET /api/submissions/{id} endpoint (fetch grading result) - ALREADY DONE IN TASK 6.8
 - [x] 9.2: Implement GET /api/dashboard endpoint (user score history - stretch goal)
 - [x] 9.3: Test results retrieval
-- [ ] 9.4: Add proper error handling for not-found cases
+- [x] 9.4: Add proper error handling for not-found cases
 
 ### Phase 10: Frontend Integration Points (Backend Ready for Frontend)
 - [ ] 10.1: Document all API endpoints with example requests/responses
@@ -1776,4 +1776,39 @@ IN_PROGRESS
 - The dashboard endpoint is now functional
 - Returns data from joined submissions + grading_results + problems tables
 - Next task (9.4) will add proper error handling for not-found cases
+
+## Iteration Update (Task 9.4 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 9.4: Added proper error handling for not-found cases.
+  - **Updated** `backend/app/routes/dashboard.py`:
+    - Added `HTTPException` import
+    - Added try-except blocks with proper error handling to all 3 dashboard endpoints
+    - All database errors now return HTTP 500 with logged stack traces
+    - Added docstring updates with `Raises:` sections
+  - **Verified existing error handling**:
+    - ✅ GET /api/problems/{id} → Returns 404 "Problem 'id' not found"
+    - ✅ GET /api/submissions/{id} → Returns 404 "Submission id not found"
+    - ✅ SSE stream → Returns failed event when submission not found
+  - **Added error handling**:
+    - ✅ GET /api/dashboard → Returns 500 on database errors
+    - ✅ GET /api/dashboard/history → Returns 500 on database errors
+    - ✅ GET /api/dashboard/summary → Returns 500 on database errors
+
+### Validation
+- Syntax validation: `uv run python -m py_compile backend/app/routes/dashboard.py` ✅
+- End-to-end tests:
+  - GET /api/dashboard → 200 OK with data ✅
+  - GET /api/dashboard/summary → 200 OK with data ✅
+  - GET /api/dashboard/history?limit=2 → 200 OK with 2 entries ✅
+  - GET /api/submissions/nonexistent-uuid → 404 "not found" ✅
+  - GET /api/problems/nonexistent-problem → 404 "not found" ✅
+
+### Notes
+- Phase 9 (Results Retrieval & Dashboard) is now complete with all tasks done (9.1-9.4)
+- All routes now have consistent error handling patterns
+- Next phase (10) focuses on Frontend Integration Points
 

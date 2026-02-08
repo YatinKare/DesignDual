@@ -6,7 +6,7 @@ import logging
 from typing import Any, Dict, List
 
 import aiosqlite
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.services import db_connection
 from app.services.dashboard import get_score_history, get_score_summary
@@ -33,17 +33,27 @@ async def get_dashboard(
         Dashboard data containing:
         - summary: Performance summary with counts and averages
         - history: List of recent completed submissions with scores
+
+    Raises:
+        HTTPException: 500 if database error occurs
     """
-    # Get performance summary
-    summary = await get_score_summary(connection)
+    try:
+        # Get performance summary
+        summary = await get_score_summary(connection)
 
-    # Get score history
-    history = await get_score_history(connection, limit=limit)
+        # Get score history
+        history = await get_score_history(connection, limit=limit)
 
-    return {
-        "summary": summary,
-        "history": history,
-    }
+        return {
+            "summary": summary,
+            "history": history,
+        }
+    except Exception as e:
+        logger.error(f"Failed to retrieve dashboard data: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve dashboard data",
+        )
 
 
 @router.get("/dashboard/history")
@@ -61,8 +71,18 @@ async def get_dashboard_history(
 
     Returns:
         List of score history entries with submission details and scores.
+
+    Raises:
+        HTTPException: 500 if database error occurs
     """
-    return await get_score_history(connection, limit=limit)
+    try:
+        return await get_score_history(connection, limit=limit)
+    except Exception as e:
+        logger.error(f"Failed to retrieve score history: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve score history",
+        )
 
 
 @router.get("/dashboard/summary")
@@ -77,8 +97,18 @@ async def get_dashboard_summary(
     Returns:
         Performance summary with total submissions, average score,
         best/worst scores, and verdict breakdown.
+
+    Raises:
+        HTTPException: 500 if database error occurs
     """
-    return await get_score_summary(connection)
+    try:
+        return await get_score_summary(connection)
+    except Exception as e:
+        logger.error(f"Failed to retrieve score summary: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve score summary",
+        )
 
 
 __all__ = ["router"]
