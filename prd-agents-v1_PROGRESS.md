@@ -234,7 +234,7 @@ Based on the PRD, the backend needs:
 - [x] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
 - [x] 7.5: Implement FinalAssemblerV2 (build SubmissionResultV2, enforce 4 phase cards + 4 evidence)
 - [ ] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
-- [ ] 7.7: Update session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2)
+- [x] 7.7: Update session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2)
 - [ ] 7.8: Update agent prompts to strict JSON with timestamps + evidence per phase
 
 ### Phase 8: Server-Sent Events (Real-time Progress Streaming)
@@ -1453,5 +1453,126 @@ IN_PROGRESS
 - The implementation enforces all hard constraints required by the Screen 2 contract
 - GradingPipelineV2 is now complete with all 4 synthesis agents implemented (✅ tasks 7.1-7.5)
 - Next task (7.6) is optional (ContractGuardAgent for extra validation)
-- Next critical task (7.7) will update the grading service to use the v2 pipeline with proper session.state structure
-- The v2 pipeline is ready for integration testing once session.state is properly initialized
+- Task 7.7 completed: Session state updated to v2 format with phase_artifacts
+- The v2 pipeline is ready for integration testing with proper session.state initialization
+
+## Iteration Update (Task 7.7 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 7.7: Updated session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2).
+  - **Updated** `backend/app/services/grading.py`:
+    - Added imports for `get_submission_artifacts` and `get_transcript_snippets`
+    - Added `TranscriptSnippet` to imports for type hints
+    - Added `datetime` import for timestamp handling
+  - **Created** `build_submission_bundle_v2()` function (80+ lines):
+    - Fetches submission and problem data from database
+    - Fetches artifact URLs from `submission_artifacts` table (not filesystem paths)
+    - Fetches transcript snippets from `submission_transcripts` table
+    - Validates all 4 phases have artifacts with canvas URLs
+    - Assembles `phase_artifacts` dict with structure: `{phase: {snapshot_url, transcripts[]}}`
+    - Returns bundle with: `submission_id`, `problem`, `phase_times`, `phase_artifacts`, `created_at`, `completed_at`
+  - **Created** `build_grading_session_state_v2()` function (60+ lines):
+    - Builds v2 session state from submission bundle
+    - **Input fields**:
+      - `submission_id`: Submission UUID
+      - `problem`: Problem metadata with rubric_definition
+      - `phase_times`: Dict mapping phase → seconds
+      - `phase_artifacts`: Dict mapping phase → {snapshot_url, transcripts[]}
+      - `created_at`: ISO timestamp when submission was created
+      - `completed_at`: None initially, will be set when grading completes
+    - **Phase output slots** (v2 format):
+      - `phase:clarify`: PhaseAgentOutput for clarify phase (initially None)
+      - `phase:estimate`: PhaseAgentOutput for estimate phase (initially None)
+      - `phase:design`: PhaseAgentOutput for design phase (initially None)
+      - `phase:explain`: PhaseAgentOutput for explain phase (initially None)
+    - **Synthesis output slots** (v2 format):
+      - `rubric_radar`: RubricRadarAgent output (initially None)
+      - `plan_outline`: PlanOutlineAgent output (initially None)
+      - `final_report_v2`: FinalAssemblerV2 output (complete SubmissionResultV2, initially None)
+  - **Session State Structure Changes**:
+    - ✅ Replaced v1 `phases` array with v2 `phase_artifacts` dict
+    - ✅ Replaced v1 output slots (`scoping_result`, `design_result`, `scale_result`, `tradeoff_result`, `final_report`)
+    - ✅ Added v2 output slots (`phase:clarify`, `phase:estimate`, `phase:design`, `phase:explain`, `rubric_radar`, `plan_outline`, `final_report_v2`)
+    - ✅ Added metadata fields (`created_at`, `completed_at`)
+    - ✅ V1 functions preserved for backwards compatibility (`build_submission_bundle`, `build_grading_session_state`)
+  - **Created validation test**: `backend/test_session_state_v2.py` (140+ lines)
+    - Validates all input fields are present and correct
+    - Validates `phase_artifacts` structure with snapshot URLs and transcript arrays
+    - Validates all 7 v2 output slots are present and initialized to None
+    - Validates v1 fields are correctly excluded (phases, scoping_result, design_result, etc.)
+    - All validation checks passed ✅
+
+### V2 Session State Format (Fully Implemented)
+```python
+{
+  # Input (set by grading service)
+  "submission_id": "uuid-string",
+  "problem": { "id", "title", "prompt", "rubric_definition", ... },
+  "phase_times": { "clarify": 300, "estimate": 400, "design": 600, "explain": 400 },
+  "phase_artifacts": {
+    "clarify": { "snapshot_url": "/uploads/...", "transcripts": [{timestamp_sec, text}, ...] },
+    "estimate": { "snapshot_url": "/uploads/...", "transcripts": [...] },
+    "design": { "snapshot_url": "/uploads/...", "transcripts": [...] },
+    "explain": { "snapshot_url": "/uploads/...", "transcripts": [...] }
+  },
+  "created_at": "2026-02-08T10:30:00",
+  "completed_at": None,  # Set when grading completes
+
+  # Output (written by phase agents)
+  "phase:clarify": None,   # PhaseAgentOutput
+  "phase:estimate": None,  # PhaseAgentOutput
+  "phase:design": None,    # PhaseAgentOutput
+  "phase:explain": None,   # PhaseAgentOutput
+
+  # Output (written by synthesis agents)
+  "rubric_radar": None,     # RubricRadarAgent output
+  "plan_outline": None,     # PlanOutlineAgent output
+  "final_report_v2": None   # FinalAssemblerV2 output (complete SubmissionResultV2)
+}
+```
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/services/grading.py` ✅
+- Import validation: Successfully imported `build_submission_bundle_v2`, `build_grading_session_state_v2` ✅
+- Structure test: `uv run python test_session_state_v2.py` ✅
+  - All input fields validated (submission_id, problem, phase_times, phase_artifacts, timestamps)
+  - All 4 phase output slots validated (phase:clarify, phase:estimate, phase:design, phase:explain)
+  - All 3 synthesis output slots validated (rubric_radar, plan_outline, final_report_v2)
+  - V1 fields correctly excluded (phases array, v1 output slots)
+
+### Implementation Details
+
+**Phase Artifacts Structure**:
+- Uses `snapshot_url` instead of base64-encoded canvas data (more efficient)
+- Fetches URLs from `submission_artifacts` table (persisted during upload)
+- Fetches transcript snippets from `submission_transcripts` table
+- Each phase has: `{snapshot_url: string, transcripts: Array<{timestamp_sec, text}>}`
+
+**Output Key Namespacing**:
+- Phase agents use `"phase:<phase>"` format (e.g., `"phase:clarify"`)
+- Synthesis agents use descriptive keys (`"rubric_radar"`, `"plan_outline"`, `"final_report_v2"`)
+- No conflicts with v1 output keys (different naming patterns)
+
+**Backwards Compatibility**:
+- V1 functions (`build_submission_bundle`, `build_grading_session_state`) remain unchanged
+- V2 functions are additive, not replacements
+- Allows gradual migration from v1 to v2 pipeline
+
+**Data Flow**:
+1. `build_submission_bundle_v2()` fetches data from DB and assembles v2 bundle
+2. `build_grading_session_state_v2()` transforms bundle into session state
+3. Session state is passed to `create_grading_pipeline_v2()` agents
+4. Agents write outputs to their respective output_keys in session.state
+5. Final result extracted from `session.state["final_report_v2"]`
+
+### Notes
+- The v2 session state format is fully compliant with backend-revision-api.md requirements
+- All 7 output slots are properly namespaced and initialized
+- Phase artifacts use URL references instead of base64 data for efficiency
+- Transcript snippets are fetched from database (timestamped segments)
+- The implementation is ready for integration with the v2 grading pipeline
+- Next task (7.8) will update agent prompts if needed (though current prompts already use strict JSON)
+- The v2 pipeline can now be tested end-to-end once integrated into the grading service

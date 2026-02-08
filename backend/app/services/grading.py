@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import aiosqlite
 from google.adk.runners import InMemoryRunner
@@ -16,7 +17,8 @@ from google.genai import types
 from app.agents import grading_pipeline
 from app.db import BACKEND_DIR, REPO_ROOT
 from app.models import GradingReport, PhaseName, SubmissionStatus
-from app.models.contract_v2 import StreamStatus
+from app.models.contract_v2 import StreamStatus, TranscriptSnippet
+from app.services.artifacts import get_submission_artifacts
 from app.services.database import get_db_connection
 from app.services.grading_events import save_grading_event
 from app.services.problems import get_problem_by_id
@@ -26,6 +28,7 @@ from app.services.submissions import (
     update_submission_transcripts,
 )
 from app.services.transcription import transcribe_audio_files_parallel
+from app.services.transcripts import get_transcript_snippets
 
 PHASE_ORDER: tuple[PhaseName, ...] = (
     PhaseName.CLARIFY,
@@ -240,10 +243,82 @@ async def build_submission_bundle(
     }
 
 
+async def build_submission_bundle_v2(
+    connection: aiosqlite.Connection,
+    submission_id: str,
+) -> Dict[str, Any]:
+    """Assemble a v2 grading submission bundle from persisted data.
+
+    V2 format uses phase_artifacts with snapshot URLs and transcript snippets
+    instead of the v1 phases array with base64-encoded canvases.
+
+    Args:
+        connection: Active database connection.
+        submission_id: Submission ID to assemble.
+
+    Returns:
+        Dictionary payload with problem, phase_artifacts, phase_times, and metadata.
+
+    Raises:
+        ValueError: If submission/problem is missing or required artifacts are incomplete.
+    """
+    submission = await get_submission_by_id(connection, submission_id)
+    if submission is None:
+        raise ValueError(f"Submission '{submission_id}' not found")
+
+    problem = await get_problem_by_id(connection, submission.problem_id)
+    if problem is None:
+        raise ValueError(
+            f"Problem '{submission.problem_id}' not found for submission '{submission_id}'"
+        )
+
+    # Fetch artifacts from submission_artifacts table
+    artifacts = await get_submission_artifacts(connection, submission_id)
+    if not artifacts or len(artifacts) != 4:
+        raise ValueError(
+            f"Submission '{submission_id}' is missing artifacts (expected 4 phases, got {len(artifacts)})"
+        )
+
+    # Build phase_artifacts dict with snapshot URLs and transcript snippets
+    phase_artifacts: Dict[str, Dict[str, Any]] = {}
+    for phase in PHASE_ORDER:
+        phase_key = phase.value
+        artifact = artifacts.get(phase_key)
+        if not artifact or not artifact.get("canvas_url"):
+            raise ValueError(
+                f"Submission '{submission_id}' is missing canvas URL for phase '{phase_key}'"
+            )
+
+        # Fetch transcript snippets for this phase
+        transcript_snippets = await get_transcript_snippets(
+            connection, submission_id, phase=phase_key
+        )
+
+        phase_artifacts[phase_key] = {
+            "snapshot_url": artifact["canvas_url"],
+            "transcripts": [
+                {"timestamp_sec": snippet.timestamp_sec, "text": snippet.text}
+                for snippet in transcript_snippets
+            ],
+        }
+
+    return {
+        "submission_id": submission.id,
+        "problem": problem.model_dump(mode="json"),
+        "phase_times": {
+            phase_name.value: seconds
+            for phase_name, seconds in submission.phase_times.items()
+        },
+        "phase_artifacts": phase_artifacts,
+        "created_at": submission.created_at.isoformat() if submission.created_at else None,
+        "completed_at": None,  # Will be set when grading completes
+    }
+
+
 def build_grading_session_state(
     submission_bundle: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Build initial ADK session state from a submission bundle."""
+    """Build initial ADK session state from a submission bundle (v1 format)."""
     return {
         "submission_id": submission_bundle["submission_id"],
         "problem": submission_bundle["problem"],
@@ -255,6 +330,55 @@ def build_grading_session_state(
         "scale_result": None,
         "tradeoff_result": None,
         "final_report": None,
+    }
+
+
+def build_grading_session_state_v2(
+    submission_bundle: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Build initial ADK session state from a submission bundle (v2 format).
+
+    V2 format uses phase_artifacts instead of phases array, and uses different output keys.
+
+    Session State Structure (v2):
+        Input (set by grading service):
+            - problem: Problem metadata with rubric_definition
+            - phase_artifacts: Dict mapping phase → {snapshot_url, transcripts[]}
+            - phase_times: Dict mapping phase → seconds
+            - submission_id: Submission UUID
+            - created_at: ISO timestamp
+            - completed_at: ISO timestamp (set when grading completes)
+
+        Output (written by agents):
+            - phase:clarify: PhaseAgentOutput for clarify phase
+            - phase:estimate: PhaseAgentOutput for estimate phase
+            - phase:design: PhaseAgentOutput for design phase
+            - phase:explain: PhaseAgentOutput for explain phase
+            - rubric_radar: RubricRadarAgent output
+            - plan_outline: PlanOutlineAgent output
+            - final_report_v2: FinalAssemblerV2 output (complete SubmissionResultV2)
+    """
+    phase_artifacts = submission_bundle.get("phase_artifacts", {})
+
+    return {
+        # Input metadata
+        "submission_id": submission_bundle["submission_id"],
+        "problem": submission_bundle["problem"],
+        "phase_times": submission_bundle["phase_times"],
+        "phase_artifacts": phase_artifacts,
+        "created_at": submission_bundle.get("created_at"),
+        "completed_at": None,  # Will be set when grading completes
+
+        # Pre-seed expected v2 agent output slots (phase-based)
+        "phase:clarify": None,
+        "phase:estimate": None,
+        "phase:design": None,
+        "phase:explain": None,
+
+        # Pre-seed synthesis agent output slots
+        "rubric_radar": None,
+        "plan_outline": None,
+        "final_report_v2": None,
     }
 
 
