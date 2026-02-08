@@ -223,7 +223,7 @@ Based on the PRD, the backend needs:
 - [x] 6.7: Standardize SSE stream statuses to new phase list + include optional progress/phase
 - [x] 6.8: Upgrade GET /api/submissions/{id} to full SubmissionResultV2 payload + result_version
 - [x] 6.9: Add compatibility mapping for legacy stream statuses
-- [ ] 6.10: Add/adjust storage tables: submissions, submission_artifacts, submission_transcripts, grading_events
+- [x] 6.10: Add/adjust storage tables: submissions, submission_artifacts, submission_transcripts, grading_events
 - [ ] 6.11: Non-unit smoke test by running `uv run python -m app.agents.test_pipeline` and inspecting `backend/temp/agent_test_results.json`
 
 ### Phase 7: Agentic System v2 (Screen 2 Contract Compliant)
@@ -980,3 +980,59 @@ IN_PROGRESS
 - V2-only statuses (`queued`, `processing`) gracefully return None for legacy mapping
 - All v2 StreamStatus enum values are covered in the mapping
 - Next task (6.10) will add/adjust storage tables for full v2 contract support
+
+## Iteration Update (Task 6.10 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 6.10: Added/adjusted all v2 storage tables for full contract compliance.
+  - **Created migration**: `backend/app/db/migrate_add_v2_storage.py`
+    - Adds `result_json TEXT` column to `submissions` table (for caching final v2 results)
+    - Adds `completed_at DATETIME` column to `submissions` table (for completion timestamps)
+    - Backfilled `completed_at` for 4 existing complete submissions
+    - Creates `submission_transcripts` table with columns:
+      - `id` (INTEGER PRIMARY KEY AUTOINCREMENT)
+      - `submission_id` (TEXT NOT NULL, FK to submissions)
+      - `phase` (TEXT NOT NULL, CHECK constraint: clarify/estimate/design/explain)
+      - `timestamp_sec` (REAL NOT NULL, CHECK >= 0.0)
+      - `text` (TEXT NOT NULL)
+      - `is_highlight` (BOOLEAN NOT NULL DEFAULT 0)
+      - `created_at` (DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)
+    - Created indexes:
+      - `idx_submission_transcripts_submission` on (submission_id, phase, timestamp_sec)
+      - `idx_submission_transcripts_highlights` on (submission_id, is_highlight) WHERE is_highlight = 1
+  - **Created transcript service**: `backend/app/services/transcripts.py`
+    - `save_transcript_snippet()` - save single snippet
+    - `save_transcript_snippets_batch()` - save multiple snippets efficiently
+    - `get_transcript_snippets()` - retrieve snippets with optional phase/highlight filters
+    - `mark_snippet_as_highlight()` - mark specific snippet as important
+    - `delete_transcripts()` - delete all snippets for a submission
+  - **Updated service exports**: Added all transcript functions to `app/services/__init__.py`
+
+### Storage Tables Summary (All v2 Compliant)
+1. ✅ **submissions**: `id, problem_id, status, phase_times, phases, created_at, updated_at, result_json, completed_at`
+2. ✅ **submission_artifacts**: `id, submission_id, phase, canvas_url, audio_url, canvas_mime_type, audio_mime_type, created_at`
+3. ✅ **submission_transcripts**: `id, submission_id, phase, timestamp_sec, text, is_highlight, created_at` (NEW)
+4. ✅ **grading_events**: `id, submission_id, status, message, phase, progress, created_at`
+5. ✅ **grading_results**: `submission_id, overall_score, verdict, verdict_display, dimensions, top_improvements, phase_observations, raw_report, created_at, updated_at`
+6. ✅ **problems**: `id, slug, title, prompt, difficulty, focus_tags, constraints, estimated_time_minutes, phase_time_minutes, rubric_hints, rubric_definition, sample_solution_outline, created_at, updated_at`
+
+### Validation
+- Migration executed successfully: `uv run python app/db/migrate_add_v2_storage.py` ✅
+- Schema verification: All tables and columns present as expected ✅
+- Syntax validation: `uv run python -m py_compile app/services/transcripts.py` ✅
+- Import validation: All transcript functions import successfully ✅
+- Index verification: Both indexes created on submission_transcripts ✅
+
+### Notes
+- The v2 storage schema is now fully compliant with backend-revision-api.md specifications
+- `result_json` column allows caching the full SubmissionResultV2 payload for faster retrieval
+- `completed_at` timestamp enables accurate completion time tracking
+- `submission_transcripts` table supports timestamped transcript segments with highlight markers
+- Efficient indexes enable fast lookup by submission/phase and filtering by highlights
+- The transcript service provides a clean API for storing and retrieving transcript data
+- All tables are linked with proper foreign keys and CASCADE delete for data integrity
+- Migration is idempotent and safe to run multiple times
+- Next task (6.11) will run smoke tests to verify the full pipeline works end-to-end

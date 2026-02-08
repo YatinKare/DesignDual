@@ -39,6 +39,13 @@ from .transcription import (
     transcribe_audio_files_parallel,
     is_supported_audio_format,
 )
+from .transcripts import (
+    delete_transcripts,
+    get_transcript_snippets,
+    mark_snippet_as_highlight,
+    save_transcript_snippet,
+    save_transcript_snippets_batch,
+)
 
 __all__ = [
     "db_connection",
@@ -69,4 +76,9 @@ __all__ = [
     "legacy_status_to_v2",
     "v2_status_to_legacy",
     "normalize_status_input",
+    "save_transcript_snippet",
+    "save_transcript_snippets_batch",
+    "get_transcript_snippets",
+    "mark_snippet_as_highlight",
+    "delete_transcripts",
 ]
