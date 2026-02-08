@@ -24,6 +24,7 @@ from .phase_agents import (
     create_estimate_phase_agent,
     create_explain_phase_agent,
 )
+from .plan_outline_agent import create_plan_outline_agent
 from .rubric_radar_agent import create_rubric_radar_agent
 
 
@@ -50,7 +51,7 @@ def create_grading_pipeline_v2() -> SequentialAgent:
 
         Future outputs (partially implemented):
             - rubric_radar: RubricRadarAgent output (rubric items, radar, verdict) - ✅ IMPLEMENTED
-            - plan_outline: PlanOutlineAgent output (next_attempt_plan, follow_up_questions, reference)
+            - plan_outline: PlanOutlineAgent output (next_attempt_plan, follow_up_questions, reference) - ✅ IMPLEMENTED
             - final_report_v2: FinalAssemblerV2 output (complete SubmissionResultV2)
     """
     # Create the 4 phase agents
@@ -74,11 +75,12 @@ def create_grading_pipeline_v2() -> SequentialAgent:
 
     # Create synthesis agents
     rubric_radar_agent = create_rubric_radar_agent()
+    plan_outline_agent = create_plan_outline_agent()
 
     # SequentialAgent: Orchestrates the full v2 pipeline
     # Step 1: Run all 4 phase agents in parallel
     # Step 2: Compute rubric, radar, overall score, and verdict
-    # Step 3 (future): Generate next_attempt_plan and follow_up_questions
+    # Step 3: Generate next_attempt_plan, follow_up_questions, and reference_outline
     # Step 4 (future): Assemble final SubmissionResultV2
     grading_pipeline_v2 = SequentialAgent(
         name="GradingPipelineV2",
@@ -86,7 +88,7 @@ def create_grading_pipeline_v2() -> SequentialAgent:
         sub_agents=[
             phase_evaluation_panel,
             rubric_radar_agent,  # ✅ Task 7.3 complete
-            # TODO (task 7.4): Add PlanOutlineAgent here
+            plan_outline_agent,  # ✅ Task 7.4 complete
             # TODO (task 7.5): Add FinalAssemblerV2 here
         ],
     )

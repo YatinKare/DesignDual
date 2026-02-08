@@ -231,7 +231,7 @@ Based on the PRD, the backend needs:
 - [x] 7.1: Shift to phase-first grading with 4 phase agents (clarify/estimate/design/explain)
 - [x] 7.2: Add ParallelAgent for phase agents + SequentialAgent orchestration (GradingPipelineV2)
 - [x] 7.3: Implement RubricRadarAgent (rubric + radar + overall_score + verdict + summary)
-- [ ] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
+- [x] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
 - [ ] 7.5: Implement FinalAssemblerV2 (build SubmissionResultV2, enforce 4 phase cards + 4 evidence)
 - [ ] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
 - [ ] 7.7: Update session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2)
@@ -1244,3 +1244,108 @@ IN_PROGRESS
 - The agent uses strict JSON output with proper validation and structured format
 - The implementation is fully compliant with backend-revision-api.md requirements
 - Next task (7.4) will implement PlanOutlineAgent for generating next_attempt_plan, follow_up_questions, and reference_outline
+## Iteration Update (Task 7.4 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 7.4: Implemented PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline).
+  - **Created** `backend/app/agents/plan_outline_agent.py` (165+ lines):
+    - Factory function `create_plan_outline_agent()` that returns configured LlmAgent
+    - Reads all 4 phase agent outputs from session.state (`phase:clarify`, `phase:estimate`, `phase:design`, `phase:explain`)
+    - Reads `rubric_radar` output with rubric scores, radar dimensions, overall score, and verdict
+    - Reads `problem` metadata with prompt, constraints, and rubric_definition
+    - **Generates next_attempt_plan** (exactly 3 items):
+      - Each item has `what_went_wrong` (1-2 sentence gap description) and `do_next_time` (2-3 actionable bullet points)
+      - Prioritizes high-impact improvements based on rubric scores and phase weaknesses
+      - Focuses on fundamental gaps (e.g., missing scalability discussion) over polish issues
+      - Provides specific, actionable guidance (not generic advice)
+    - **Generates follow_up_questions** (at least 3 questions):
+      - Thought-provoking questions to deepen candidate understanding
+      - Builds on areas where candidate showed partial understanding
+      - Explores tradeoffs or edge cases not fully addressed
+      - Challenges candidate to think about production concerns
+      - Specific to the problem domain
+    - **Generates reference_outline** (4-6 sections):
+      - Structured outline of a strong reference solution
+      - Standard system design sections: Requirements, Capacity, High-Level Design, Deep Dive, Tradeoffs
+      - Each section has 3-6 concise technical bullet points
+      - References specific technologies, patterns, or calculations
+      - Aligns with problem's constraints and rubric criteria
+    - Output format: Strict JSON with `next_attempt_plan[]`, `follow_up_questions[]`, `reference_outline.sections[]`
+    - Uses `output_key="plan_outline"` to store results in session.state
+  - **Updated** `backend/app/agents/orchestrator_v2.py`:
+    - Imported `create_plan_outline_agent`
+    - Added plan_outline_agent as third sub-agent in SequentialAgent
+    - Updated pipeline description to reflect current state
+    - Marked task 7.4 as complete in TODOs
+    - Updated docstring to show plan_outline output is implemented
+  - **Updated** `backend/app/agents/__init__.py`:
+    - Added import for `create_plan_outline_agent`
+    - Added to __all__ list under "Synthesis agents (v2)" section
+  - **Pipeline Architecture (after task 7.4)**:
+    ```
+    SequentialAgent: GradingPipelineV2
+    ├── ParallelAgent: PhaseEvaluationPanel
+    │   ├── ClarifyPhaseAgent  (output_key: "phase:clarify")
+    │   ├── EstimatePhaseAgent (output_key: "phase:estimate")
+    │   ├── DesignPhaseAgent   (output_key: "phase:design")
+    │   └── ExplainPhaseAgent  (output_key: "phase:explain")
+    ├── RubricRadarAgent       (output_key: "rubric_radar")
+    └── PlanOutlineAgent       (output_key: "plan_outline") ← NEW
+    ```
+  - **Session State (updated)**:
+    - Input: `problem`, `phase_artifacts`, `phase_times`
+    - Phase outputs: `phase:clarify`, `phase:estimate`, `phase:design`, `phase:explain`
+    - Synthesis outputs: `rubric_radar`, `plan_outline` ← NEW
+    - Future: `final_report_v2`
+  - **Created validation test**: `backend/test_plan_outline_integration.py`
+    - Test 1: PlanOutlineAgent instantiation ✅
+    - Test 2: GradingPipelineV2 structure (3 sub-agents) ✅
+    - Test 3: Phase agents output_keys validation ✅
+    - Test 4: Synthesis agents output_keys validation ✅
+    - All tests passed ✅
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/agents/plan_outline_agent.py` ✅
+- Syntax validation: `uv run python -m py_compile app/agents/orchestrator_v2.py` ✅
+- Syntax validation: `uv run python -m py_compile app/agents/__init__.py` ✅
+- Import validation: Successfully imported `create_plan_outline_agent` ✅
+- Agent instantiation: Successfully created PlanOutlineAgent with correct name and output_key ✅
+- Pipeline structure test: `uv run python test_plan_outline_integration.py` ✅
+  - PlanOutlineAgent correctly added as 3rd sub-agent
+  - Pipeline now has 3 sub-agents (PhaseEvaluationPanel + RubricRadarAgent + PlanOutlineAgent)
+  - All output_keys correctly configured
+
+### Implementation Details
+
+**Next Attempt Plan Generation**:
+- Identifies top 3 most impactful improvements based on rubric scores and phase weaknesses
+- Each item includes:
+  - `what_went_wrong`: Clear description of the gap or weakness (1-2 sentences)
+  - `do_next_time`: Actionable, specific steps to improve (2-3 bullet points)
+- Prioritizes fundamental gaps over polish issues
+- Provides specific guidance, not generic advice
+
+**Follow-Up Questions Generation**:
+- At least 3 thought-provoking questions (can have more)
+- Builds on areas where candidate showed partial understanding
+- Explores tradeoffs or edge cases not fully addressed
+- Challenges candidate to think about production concerns
+- Specific to the problem domain
+
+**Reference Outline Generation**:
+- 4-6 sections covering standard system design topics
+- Each section has 3-6 concise technical bullet points
+- References specific technologies, patterns, or calculations
+- Aligns with problem's constraints and rubric criteria
+- Provides a reference standard for candidates to aim for
+
+### Notes
+- The PlanOutlineAgent provides constructive, actionable guidance for candidate improvement
+- All guidance is specific to the problem and the candidate's performance (not generic)
+- The agent follows a "Improvement Mentor" persona focused on growth, not just criticism
+- Output is fully compliant with backend-revision-api.md v2 contract requirements
+- The implementation uses strict JSON output with proper validation
+- Next task (7.5) will implement FinalAssemblerV2 to build the complete SubmissionResultV2
