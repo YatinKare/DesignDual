@@ -254,7 +254,7 @@ Based on the PRD, the backend needs:
 - [x] 9.4: Add proper error handling for not-found cases
 
 ### Phase 10: Frontend Integration Points (Backend Ready for Frontend)
-- [ ] 10.1: Document all API endpoints with example requests/responses
+- [x] 10.1: Document all API endpoints with example requests/responses
 - [ ] 10.2: Test CORS configuration for frontend connection
 - [ ] 10.3: Verify file upload size limits are appropriate
 - [ ] 10.4: Create Postman/Thunder Client collection for testing
@@ -1812,3 +1812,39 @@ IN_PROGRESS
 - All routes now have consistent error handling patterns
 - Next phase (10) focuses on Frontend Integration Points
 
+
+## Iteration Update (Task 10.1 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 10.1: Documented all API endpoints with example requests/responses.
+  - **Created** `backend/docs/API.md` (449 lines) with comprehensive documentation for all 8 endpoints:
+    - `GET /api/problems` — List all problems
+    - `GET /api/problems/{id}` — Get problem details with rubric_definition
+    - `POST /api/submissions` — Submit interview for grading (multipart/form-data)
+    - `GET /api/submissions/{id}` — Get complete grading result (SubmissionResultV2)
+    - `GET /api/submissions/{id}/stream` — SSE stream for real-time grading progress
+    - `GET /api/dashboard` — Combined score history + performance summary
+    - `GET /api/dashboard/history` — Score history only
+    - `GET /api/dashboard/summary` — Performance summary only
+  - **Documentation includes**:
+    - Example JSON request/response payloads for each endpoint
+    - curl command examples
+    - Path and query parameter tables
+    - Error response formats
+    - Environment variable reference
+    - Server startup instructions
+
+### Validation
+- File created: `backend/docs/API.md` ✅
+- Line count: 449 lines ✅
+- Covers all 8 API endpoints ✅
+- Includes practical curl examples ✅
+
+### Notes
+- Documentation is designed for frontend developers to integrate with the backend
+- All v2 contract types (SubmissionResultV2, PhaseScore, etc.) are documented
+- SSE event sequence documented with all status values
+- Next task (10.2) will test CORS configuration for frontend connection
