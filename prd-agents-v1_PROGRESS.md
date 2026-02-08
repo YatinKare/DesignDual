@@ -218,7 +218,7 @@ Based on the PRD, the backend needs:
 - [x] 6.2: Update GET /api/problems to return id, name, difficulty (and optional metadata)
 - [x] 6.3: Update GET /api/problems/{id} to return rubric_definition with phase_weights
 - [x] 6.4: Harden POST /api/submissions validation (problem_id, PNG/non-empty, phase_times keys)
-- [ ] 6.5: Persist submission artifacts (canvas/audio) with per-phase mapping and URLs
+- [x] 6.5: Persist submission artifacts (canvas/audio) with per-phase mapping and URLs
 - [ ] 6.6: Set submission status lifecycle: queued -> processing
 - [ ] 6.7: Standardize SSE stream statuses to new phase list + include optional progress/phase
 - [ ] 6.8: Upgrade GET /api/submissions/{id} to full SubmissionResultV2 payload + result_version
@@ -702,3 +702,59 @@ IN_PROGRESS
 - The validation order (problem_id → phase_times → canvas files) ensures logical error reporting
 - File storage service already handled MIME type validation, but we added upfront size checks for faster feedback
 - Next task (6.5) will persist submission artifacts with per-phase mapping and URLs
+
+## Iteration Update (Task 6.5 - Sat Feb 7 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 6.5: Implemented artifact persistence with per-phase mapping and URLs.
+  - **Created `submission_artifacts` table**:
+    - Schema: `submission_id, phase, canvas_url, audio_url, canvas_mime_type, audio_mime_type, created_at`
+    - Unique constraint on `(submission_id, phase)` for UPSERT support
+    - Foreign key to submissions table with CASCADE delete
+    - Index on `submission_id` for fast lookups
+  - **Created database migration**: `backend/app/db/migrate_add_submission_artifacts.py`
+    - Adds new table
+    - Migrates existing data from `submissions.phases` JSON to separate artifact records
+    - Converts filesystem paths to URL format (`/uploads/{id}/{filename}`)
+    - Successfully migrated 88 artifact records from 22 submissions
+  - **Added URL conversion**: Extended `FileStorageService` with `path_to_url()` method
+    - Converts filesystem paths to relative URLs for client access
+    - Format: `/uploads/{submission_id}/{filename}`
+    - Production-ready: can be extended to return S3/CDN URLs
+  - **Created artifact service**: `backend/app/services/artifacts.py`
+    - `save_submission_artifact()`: Persist single artifact with UPSERT
+    - `save_submission_artifacts_batch()`: Persist all 4 phase artifacts efficiently
+    - `get_submission_artifacts()`: Retrieve all artifacts for a submission
+    - Proper error handling and logging throughout
+  - **Updated POST /api/submissions**:
+    - Now persists artifacts to both locations:
+      1. `submissions.phases` JSON (for backwards compatibility)
+      2. `submission_artifacts` table (for v2 contract)
+    - Converts filesystem paths to URLs using `path_to_url()`
+    - Graceful error handling (logs but doesn't fail if artifact persistence fails)
+  - **Created end-to-end test**: `backend/test_artifact_persistence.sh`
+    - Creates minimal valid PNG files
+    - Submits via curl
+    - Verifies all 4 artifacts persisted to database
+    - Validates URL format and MIME types
+    - All tests passed ✅
+
+### Validation
+- Migration: `uv run python backend/app/db/migrate_add_submission_artifacts.py` ✅
+- Syntax: `uv run python -m py_compile backend/app/services/artifacts.py` ✅
+- End-to-end test: `./test_artifact_persistence.sh` ✅
+  - Verified 4 artifact records created
+  - Verified canvas URLs in correct format (`/uploads/{id}/canvas_{phase}.png`)
+  - Verified MIME types set correctly (`image/png`, `audio/webm`)
+  - Verified NULL handling for optional audio files
+
+### Notes
+- The implementation is fully compliant with backend-revision-api.md requirements
+- Artifact URLs are stored separately from filesystem paths for flexibility
+- The system maintains dual storage (JSON + table) during transition to v2 contract
+- Frontend can now fetch artifact URLs via the `submission_artifacts` table
+- URL format is hackathon-simple but production-ready (can swap to S3/CDN URLs)
+- Next task (6.6) will implement submission status lifecycle transitions

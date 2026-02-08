@@ -1,5 +1,10 @@
 """Service layer helpers for the backend."""
 
+from .artifacts import (
+    get_submission_artifacts,
+    save_submission_artifact,
+    save_submission_artifacts_batch,
+)
 from .database import db_connection, get_db_connection
 from .grading import (
     build_grading_session_state,
@@ -43,4 +48,7 @@ __all__ = [
     "transcribe_audio_bytes",
     "transcribe_audio_files_parallel",
     "is_supported_audio_format",
+    "save_submission_artifact",
+    "save_submission_artifacts_batch",
+    "get_submission_artifacts",
 ]

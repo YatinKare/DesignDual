@@ -9,6 +9,7 @@ import aiosqlite
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 
 from app.models import PhaseArtifacts, PhaseName, Submission
+from app.services.artifacts import save_submission_artifacts_batch
 from app.services.database import db_connection
 from app.services.file_storage import get_file_storage_service
 from app.services.grading import run_grading_pipeline_background
@@ -159,6 +160,8 @@ async def create_submission_endpoint(
 
     # Build phases dictionary with file paths
     phases_dict: Dict[PhaseName, PhaseArtifacts] = {}
+    # Also collect artifact URLs for the submission_artifacts table
+    artifacts_batch: Dict[PhaseName, Dict[str, Optional[str]]] = {}
 
     try:
         for phase_name in [
@@ -186,6 +189,17 @@ async def create_submission_endpoint(
                 audio_path=audio_path,
             )
 
+            # Convert paths to URLs for artifact table
+            canvas_url = storage_service.path_to_url(canvas_path) if canvas_path else None
+            audio_url = storage_service.path_to_url(audio_path) if audio_path else None
+
+            artifacts_batch[phase_name] = {
+                "canvas_url": canvas_url,
+                "audio_url": audio_url,
+                "canvas_mime_type": "image/png" if canvas_url else None,
+                "audio_mime_type": "audio/webm" if audio_url else None,
+            }
+
     except IOError as e:
         # If any file save fails, cleanup and raise error
         storage_service.delete_submission_files(submission_id)
@@ -202,6 +216,17 @@ async def create_submission_endpoint(
         phases=phases_dict,
         submission_id=submission_id,
     )
+
+    # Persist artifacts to submission_artifacts table
+    try:
+        await save_submission_artifacts_batch(connection, submission_id, artifacts_batch)
+    except Exception as e:
+        # Log error but don't fail the request - artifacts are already in phases JSON
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to persist artifacts for submission {submission_id}: {e}")
+
     background_tasks.add_task(run_grading_pipeline_background, submission.id)
 
     return {"submission_id": submission.id}

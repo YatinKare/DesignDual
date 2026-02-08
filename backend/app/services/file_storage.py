@@ -184,6 +184,32 @@ class FileStorageService:
             expected_types=["audio/webm", "video/webm"],  # webm can be audio or video MIME type
         )
 
+    def path_to_url(self, file_path: str) -> str:
+        """Convert a filesystem path to a URL for client access.
+
+        Args:
+            file_path: Filesystem path (e.g., "storage/uploads/abc123/canvas_clarify.png")
+
+        Returns:
+            URL path (e.g., "/uploads/abc123/canvas_clarify.png")
+
+        Note:
+            For local development, returns relative URL.
+            In production, this could be modified to return S3/CDN URLs.
+        """
+        # Extract the submission_id and filename from the path
+        # Expected format: storage/uploads/{submission_id}/{filename}
+        path = Path(file_path)
+
+        # Get the last two parts: submission_id and filename
+        if len(path.parts) >= 2:
+            submission_id = path.parts[-2]
+            filename = path.parts[-1]
+            return f"/uploads/{submission_id}/{filename}"
+
+        # Fallback: just use the filename
+        return f"/uploads/{path.name}"
+
     def delete_submission_files(self, submission_id: str) -> None:
         """Delete all files for a submission.
 
