@@ -544,53 +544,24 @@ IN_PROGRESS
 IN_PROGRESS
 
 ### Completed This Iteration
-- Task 5.6: Tested full grading pipeline with real submission via curl.
+- Task 5.6: Tested full grading pipeline with real submission via curl — **PASSED**.
   - **Created test script**: `backend/test_full_pipeline.sh`
-    - Automated test that creates test canvas images, starts FastAPI server, submits grading request, monitors progress
-    - Tests the full flow: POST /api/submissions → background grading → database updates
-  - **Test execution**:
-    - ✅ Successfully created submission (ID: `301d5b94-db02-4f3e-9b55-eb2cebd2220b`)
-    - ✅ Background task triggered and ran
-    - ✅ File upload and storage worked correctly
-    - ✅ Submission created in database with status "received"
-    - ✅ Status updated to "transcribing" (no audio files, so skipped transcription)
-    - ✅ Status updated to "grading"
-    - ✅ ADK agent pipeline executed
-    - ⚠️ Pipeline failed with `INVALID_API_KEY` error (expected - .env has placeholder key)
-    - ✅ Error handling caught the failure
-    - ✅ Status updated to "failed" in database
-    - ✅ Error logged with full context
-  - **Validation results**:
-    - ✅ Full pipeline flow works end-to-end
-    - ✅ Background task execution confirmed
-    - ✅ Error handling works as designed
-    - ✅ Database status updates work correctly
-    - ✅ Session cleanup executed (checked via logs)
-    - ⚠️ API key configuration needed for full success (expected configuration issue, not code issue)
-
-### Key Findings
-1. **Pipeline architecture validated**: The complete flow from submission creation → background processing → agent execution → database storage works correctly.
-2. **Error handling verified**: The pipeline properly caught the API authentication error, updated submission status to "failed", and logged detailed error context.
-3. **All integration points confirmed**:
-   - POST /api/submissions endpoint ✅
-   - File upload and storage ✅
-   - Background task execution ✅
-   - Database submission creation ✅
-   - Status lifecycle (received → transcribing → grading → failed) ✅
-   - ADK session initialization ✅
-   - Agent pipeline execution attempt ✅
-   - Error capture and status updates ✅
-   - Session cleanup ✅
-4. **Configuration requirement**: A valid Google API key in `.env` is needed for agents to execute successfully. The placeholder key correctly triggers authentication failure, which is properly handled.
-
-### Test Artifacts
-- Test script: `backend/test_full_pipeline.sh`
-- Server logs: `backend/temp/server.log` (contains full error trace)
-- Test submission ID: `301d5b94-db02-4f3e-9b55-eb2cebd2220b`
-- Test canvas files: `backend/temp/canvas_{clarify,estimate,design,explain}.png`
+    - Kills old server, starts fresh with correct .env, submits via curl, polls DB for status
+  - **Bugs found and fixed during testing**:
+    1. **Root .env not loaded** (`main.py`): `load_dotenv` only loaded `backend/.env` (placeholder key). Fixed to load project root `.env` first.
+    2. **Agent output is a JSON string** (`grading.py`): ADK `output_key` stores LLM response as a string. Added JSON parsing + markdown fence stripping.
+    3. **Schema mismatch** (`grading.py`): Agents output uppercase verdicts (`HIRE`) and 11 sub-dimension keys. Added `_normalize_agent_report()` to lowercase verdict and collapse sub-dimensions into 4 parent dimensions.
+  - **Final test result** (submission `b5bd9825`):
+    - ✅ Submission created, files stored
+    - ✅ Background task triggered
+    - ✅ Status lifecycle: received → grading → **complete**
+    - ✅ ADK agents ran successfully (4 parallel specialists + synthesis)
+    - ✅ Grading result persisted to database
+    - **Score: 8.4 / 10, Verdict: Hire**
+    - All 4 dimensions scored (scoping: 9.0, design: 8.0, scale: 8.3, tradeoff: 8.7)
+    - Phase observations and top improvements populated
+  - Results saved to `backend/temp/pipeline_test_result_20260207_215653.json`
 
 ### Notes
-- The test confirms Phase 5 (Grading Pipeline Integration) is fully implemented and working.
-- The API key error is expected behavior - not a bug, but a configuration requirement.
-- With a valid API key, the pipeline would complete successfully and store grading results.
+- Phase 5 (Grading Pipeline Integration) is fully complete and verified working end-to-end.
 - Next phase (6) will focus on backend route updates and contract compliance.
