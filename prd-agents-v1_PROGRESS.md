@@ -236,6 +236,7 @@ Based on the PRD, the backend needs:
 - [ ] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
 - [x] 7.7: Update session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2)
 - [x] 7.8: Update agent prompts to strict JSON with timestamps + evidence per phase (already complete - all agents use JSON_RESPONSE_CONFIG)
+- [x] 7.9: User test new agentic system with examples in the temp/ folder by running `uv run ...` and **manually inspecting output** no unit tests allowed. No shortcuts allowed.
 
 ### Phase 8: Server-Sent Events (Real-time Progress Streaming)
 - [ ] 8.1: Install and configure sse-starlette for FastAPI
@@ -1576,3 +1577,109 @@ IN_PROGRESS
 - The implementation is ready for integration with the v2 grading pipeline
 - Task 7.8 verified complete: All agents (phase + synthesis) already use strict JSON output via `JSON_RESPONSE_CONFIG`, and all phase agents include timestamps in evidence/strengths/weaknesses/highlights fields
 - The v2 pipeline can now be tested end-to-end once integrated into the grading service
+
+## Iteration Update (Task 7.9 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 7.9: Attempted user testing of v2 agentic system - **PARTIAL COMPLETION WITH ISSUES FOUND**.
+  - **Test Execution**:
+    - Ran `uv run python -m app.agents.test_pipeline_v2`
+    - Pipeline executed but produced no outputs (7 events processed, all output keys missing from session state)
+    - Test results saved to: `backend/temp/pipeline_v2_test_results.json`
+  - **Issues Identified**:
+    1. **Template Variable Error**: Phase agents had `{submission_id}` template variables in instruction examples
+       - ADK's template injection system tried to resolve these from session state
+       - Fixed by replacing with placeholder text: `<use actual snapshot_url from phase_artifacts.{phase}>`
+       - Modified: `backend/app/agents/phase_agents.py` (lines 65, 160, 261, 362)
+    2. **Session State Not Accessible to Agents**: Agents don't receive session state data properly
+       - Only 7 events processed (expected 50+)
+       - No outputs written to session state (phase:clarify, phase:estimate, phase:design, phase:explain all null)
+       - Root cause: ADK agents need data passed as formatted text messages, not via session state injection
+       - V1 test (test_pipeline.py) works because it passes data as user message text
+       - V2 test (test_pipeline_v2.py) fails because it relies on session state injection
+  - **Test Script Fixes Applied**:
+    - Added `submission_id`, `created_at`, `completed_at` to session state in `test_pipeline_v2.py`
+    - Removed `{submission_id}` template variables from phase agent instructions
+  - **Required Fix** (NOT IMPLEMENTED - blocked on architectural decision):
+    - Refactor `test_pipeline_v2.py` to pass `phase_artifacts` data as formatted text message (like v1 test)
+    - OR: Research ADK best practices for session state injection and update agent instructions accordingly
+    - Recommendation: Follow v1 pattern (text messages) since it's proven to work
+
+### Manual Validation
+- Ran test command: `uv run python -m app.agents.test_pipeline_v2`
+- Test completed without crashes but produced empty outputs
+- Inspected `backend/temp/pipeline_v2_test_results.json`:
+  - session_state_keys: only input keys present (submission_id, problem, phase_artifacts, phase_times, created_at, completed_at)
+  - All output keys null: phase:clarify, phase:estimate, phase:design, phase:explain, rubric_radar, plan_outline, final_report_v2
+  - event_count: 7 (too low - indicates agents didn't execute)
+
+### Notes
+- Task 7.9 is marked as **INCOMPLETE** - test runs but doesn't produce valid outputs
+- The v2 agent architecture (4 phase agents + 3 synthesis agents) is correctly implemented
+- The orchestrator (ParallelAgent + SequentialAgent) is correctly structured
+- The issue is in the test harness, not the agents themselves
+- **Recommendation**: Create a new task to fix the test script by following the v1 pattern
+- **Blocker**: Need to decide on data passing strategy (text messages vs session state injection)
+- Next iteration should either:
+  1. Fix test_pipeline_v2.py to use text message passing (like v1)
+  2. Research ADK session state best practices and update agents accordingly
+  3. Skip to Phase 8 (SSE) and test v2 pipeline via real API integration instead
+
+
+## Iteration Update (Task 7.9 - Sat Feb 8 2026 - COMPLETED)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 7.9: Successfully tested v2 agentic system with full contract compliance.
+  - **Root Cause Found**: Previous test attempt failed because it relied on session.state injection, but ADK agents receive input via the user message, not from session state.
+  - **Created** `backend/app/agents/test_pipeline_v2.py` (380+ lines):
+    - Uses v1's proven pattern: formats submission data as structured text message
+    - Passes message via `new_message` parameter to `runner.run_async()`
+    - Extracts outputs from session.state after pipeline completes
+    - Validates all 7 output keys are populated
+  - **Test Results** (saved to `backend/temp/pipeline_v2_test_results.json`):
+    - ✅ All 4 phase agents completed:
+      - clarify: 7.0/10
+      - estimate: 7.5/10
+      - design: 6.5/10
+      - explain: 8.5/10
+    - ✅ All 3 synthesis agents completed:
+      - rubric_radar: overall_score=7.375, verdict="maybe"
+      - plan_outline: 3 next_attempt_plan items, 4 follow_up_questions
+      - final_report_v2: complete SubmissionResultV2 payload
+  - **V2 Contract Compliance Verified**:
+    - ✅ Exactly 4 phase_scores in order (clarify, estimate, design, explain)
+    - ✅ Exactly 4 evidence items with snapshot URLs and timestamped transcripts
+    - ✅ 5 rubric items with computed_from phases and pass/partial/fail status
+    - ✅ 4 radar dimensions (clarity, structure, power, wisdom)
+    - ✅ 3 next_attempt_plan items with what_went_wrong + do_next_time
+    - ✅ 4 follow_up_questions
+    - ✅ 6 reference_outline sections with bullets
+    - ✅ result_version: 2
+
+### Manual Validation
+- Ran `uv run python -m app.agents.test_pipeline_v2`
+- Inspected console output: SUCCESS! All 7 agent outputs captured!
+- Inspected saved JSON: `backend/temp/pipeline_v2_test_results.json`
+  - 1073 lines, 55KB of v2-compliant grading report
+  - All required fields present and properly structured
+  - Timestamps correctly extracted from transcripts
+  - Rubric scores computed as weighted averages of phase scores
+
+### Key Fix
+The v2 test now works because:
+1. Data is formatted as a structured text message (like v1)
+2. Agent instructions reference session.state for context, but actual input comes from message
+3. Session state is pre-populated for synthesis agents to read intermediate outputs
+
+### Notes
+- Phase 7 (Agentic System v2) is now complete with all required tasks done (7.1-7.5, 7.7-7.9)
+- Task 7.6 (ContractGuardAgent) is optional and can be skipped for hackathon
+- V2 pipeline produces high-quality, actionable feedback conforming to Screen 2 contract
+- Next phase (8) will implement SSE streaming for real-time progress updates
+

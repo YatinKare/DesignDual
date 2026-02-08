@@ -62,7 +62,7 @@ You MUST output a single JSON object with this exact structure:
   ],
   "evidence": {
     "phase": "clarify",
-    "snapshot_url": "/uploads/{submission_id}/canvas_clarify.png",
+    "snapshot_url": "<use actual snapshot_url from phase_artifacts.clarify>",
     "transcripts": [
       {"timestamp_sec": 12.3, "text": "So we need to handle 10 million URLs per month..."},
       {"timestamp_sec": 45.6, "text": "That means about 4000 redirects per second on average"}
@@ -157,7 +157,7 @@ You MUST output a single JSON object with this exact structure:
   ],
   "evidence": {
     "phase": "estimate",
-    "snapshot_url": "/uploads/{submission_id}/canvas_estimate.png",
+    "snapshot_url": "<use actual snapshot_url from phase_artifacts.estimate>",
     "transcripts": [
       {"timestamp_sec": 78.2, "text": "100 million URLs at 500 bytes each gives us 50 gigabytes"},
       {"timestamp_sec": 95.4, "text": "For 6 character base62 codes, we have 62^6 combinations"}
@@ -258,7 +258,7 @@ You MUST output a single JSON object with this exact structure:
   ],
   "evidence": {
     "phase": "design",
-    "snapshot_url": "/uploads/{submission_id}/canvas_design.png",
+    "snapshot_url": "<use actual snapshot_url from phase_artifacts.design>",
     "transcripts": [
       {"timestamp_sec": 234.5, "text": "I'll use PostgreSQL for strong consistency on URL mappings"},
       {"timestamp_sec": 267.8, "text": "Redis cache will handle the read-heavy traffic with a 100 to 1 ratio"}
@@ -359,7 +359,7 @@ You MUST output a single JSON object with this exact structure:
   ],
   "evidence": {
     "phase": "explain",
-    "snapshot_url": "/uploads/{submission_id}/canvas_explain.png",
+    "snapshot_url": "<use actual snapshot_url from phase_artifacts.explain>",
     "transcripts": [
       {"timestamp_sec": 456.7, "text": "We need strong consistency for URL mappings so users never get a wrong redirect"},
       {"timestamp_sec": 489.2, "text": "The counter is a single point of failure - we'd need distributed counters for high availability"}

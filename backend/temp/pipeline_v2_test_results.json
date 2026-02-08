@@ -1,0 +1,1073 @@
+{
+  "test_timestamp": "2026-02-08T04:37:28.568934",
+  "event_count": 7,
+  "session_state_keys": [
+    "submission_id",
+    "problem",
+    "phase_times",
+    "phase_artifacts",
+    "created_at",
+    "completed_at",
+    "phase:clarify",
+    "phase:estimate",
+    "phase:design",
+    "phase:explain",
+    "rubric_radar",
+    "plan_outline",
+    "final_report_v2"
+  ],
+  "agent_outputs": {
+    "phase:clarify": {
+      "phase": "clarify",
+      "score": 7.0,
+      "bullets": [
+        "Identified core functional requirements (URL shortening, redirection) from the prompt.",
+        "Quickly derived quantitative scale metrics (4000 redirects/sec, 100:1 read/write ratio) based on problem constraints.",
+        "Clearly distinguished MVP scope (basic shortening and redirection) from an optional feature (analytics).",
+        "Did not ask any clarifying questions to the interviewer about constraints, edge cases, or user personas.",
+        "Missed the opportunity to probe into URL expiration policies, which was explicitly mentioned in the problem statement."
+      ],
+      "evidence": {
+        "phase": "clarify",
+        "snapshot_url": "/uploads/test-submission/canvas_clarify.png",
+        "transcripts": [
+          {
+            "timestamp_sec": 12.0,
+            "text": "So for this URL shortener, let me first understand the requirements."
+          },
+          {
+            "timestamp_sec": 25.0,
+            "text": "We need to support shortening long URLs to short ones."
+          },
+          {
+            "timestamp_sec": 38.0,
+            "text": "For scale, I'm thinking about 100 million URLs stored, maybe 10 billion redirects per month."
+          },
+          {
+            "timestamp_sec": 52.0,
+            "text": "That's about 4000 redirects per second on average."
+          },
+          {
+            "timestamp_sec": 65.0,
+            "text": "The read to write ratio is probably 100:1 since redirects happen way more than creating new URLs."
+          },
+          {
+            "timestamp_sec": 78.0,
+            "text": "For the MVP, I'll focus on basic shortening and redirecting."
+          },
+          {
+            "timestamp_sec": 88.0,
+            "text": "Analytics can be a Phase 2 feature."
+          }
+        ],
+        "noticed": {
+          "strength": "Candidate efficiently extracted key requirements and derived quantitative metrics from the problem statement.",
+          "issue": "The candidate stated their understanding and derivations but did not ask any clarifying questions to the interviewer."
+        }
+      },
+      "strengths": [
+        {
+          "phase": "clarify",
+          "text": "Immediately recognized scale constraints and derived key metrics (QPS, read/write ratio) from the problem description.",
+          "timestamp_sec": 52.0
+        },
+        {
+          "phase": "clarify",
+          "text": "Clearly prioritized MVP features (basic shortening/redirection) vs. optional analytics.",
+          "timestamp_sec": 78.0
+        }
+      ],
+      "weaknesses": [
+        {
+          "phase": "clarify",
+          "text": "Did not ask any clarifying questions about problem scope, constraints, or potential edge cases (e.g., invalid URLs, abuse).",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "clarify",
+          "text": "Failed to explicitly address or clarify the 'URL expiration policies' requirement mentioned in the prompt.",
+          "timestamp_sec": null
+        }
+      ],
+      "highlights": [
+        {
+          "phase": "clarify",
+          "timestamp_sec": 52.0,
+          "text": "That's about 4000 redirects per second on average."
+        },
+        {
+          "phase": "clarify",
+          "timestamp_sec": 78.0,
+          "text": "For the MVP, I'll focus on basic shortening and redirecting."
+        }
+      ]
+    },
+    "phase:estimate": {
+      "phase": "estimate",
+      "score": 7.5,
+      "bullets": [
+        "Accurately calculated storage requirements for 100M URLs (50GB) with a stated assumption of 500 bytes/URL.",
+        "Correctly determined the addressable space for 6-character base62 short codes (56 billion combinations).",
+        "Acknowledged the previously derived 4000 redirects/sec (QPS) as a primary driver for the system's read-heavy nature.",
+        "The application server estimate (3-5 servers) was a 'magic number' without detailed justification based on throughput or resource utilization.",
+        "Did not estimate bandwidth, database IOPS, or specific cache memory requirements beyond mentioning Redis for hot URLs."
+      ],
+      "evidence": {
+        "phase": "estimate",
+        "snapshot_url": "/uploads/test-submission/canvas_estimate.png",
+        "transcripts": [
+          {
+            "timestamp_sec": 148.0,
+            "text": "For 100 million URLs, if each URL is about 500 bytes with metadata,"
+          },
+          {
+            "timestamp_sec": 162.0,
+            "text": "that's 50 GB of storage - very manageable."
+          },
+          {
+            "timestamp_sec": 188.0,
+            "text": "If we want 6 character short codes with base62, that's 56 billion combinations."
+          },
+          {
+            "timestamp_sec": 215.0,
+            "text": "I estimate we need maybe 3-5 application servers behind a load balancer."
+          }
+        ],
+        "noticed": {
+          "strength": "Strong mathematical accuracy in storage and short code space calculations with clear assumptions.",
+          "issue": "Server count estimate lacked detailed justification, and several other capacity dimensions were not addressed."
+        }
+      },
+      "strengths": [
+        {
+          "phase": "estimate",
+          "text": "Accurately calculated storage requirements with clearly stated assumptions (500 bytes/URL).",
+          "timestamp_sec": 162.0
+        },
+        {
+          "phase": "estimate",
+          "text": "Demonstrated understanding of short code addressable space by correctly calculating 6-char base62 combinations.",
+          "timestamp_sec": 188.0
+        },
+        {
+          "phase": "estimate",
+          "text": "Reiterated the high QPS (4000 redirects/sec) and read-heavy pattern, linking it to system needs (read-heavy database).",
+          "timestamp_sec": 175.0
+        }
+      ],
+      "weaknesses": [
+        {
+          "phase": "estimate",
+          "text": "Server count estimate (3-5) lacked detailed breakdown or justification based on throughput per server or resource utilization.",
+          "timestamp_sec": 215.0
+        },
+        {
+          "phase": "estimate",
+          "text": "Did not estimate bandwidth, database IOPS, or explicitly size cache memory requirements for 'hot URLs'.",
+          "timestamp_sec": null
+        }
+      ],
+      "highlights": [
+        {
+          "phase": "estimate",
+          "timestamp_sec": 162.0,
+          "text": "that's 50 GB of storage - very manageable."
+        },
+        {
+          "phase": "estimate",
+          "timestamp_sec": 188.0,
+          "text": "If we want 6 character short codes with base62, that's 56 billion combinations."
+        }
+      ]
+    },
+    "phase:design": {
+      "phase": "design",
+      "score": 6.5,
+      "bullets": [
+        "Clear high-level architecture with load balancer, stateless API servers, PostgreSQL, and Redis cache",
+        "Well-defined read and write data flows showing how requests are processed through the components",
+        "Appropriate component choices: SQL for strong consistency, Redis for read-heavy caching",
+        "Strong justification for technology selections, including tradeoffs of the chosen short code generation method",
+        "CDN layer was mentioned but not fully integrated into the architecture's data flow or rationale",
+        "API design was minimal, lacking explicit endpoints, request/response formats, error handling, or authentication"
+      ],
+      "evidence": {
+        "phase": "design",
+        "snapshot_url": "/uploads/test-submission/canvas_design.png",
+        "transcripts": [
+          {
+            "timestamp_sec": 292.0,
+            "text": "For the database layer, I'm using a primary SQL database like PostgreSQL for durability."
+          },
+          {
+            "timestamp_sec": 305.0,
+            "text": "In front of that, a Redis cache layer for frequently accessed URLs."
+          },
+          {
+            "timestamp_sec": 332.0,
+            "text": "Write path: client -> load balancer -> API server -> generate short code -> write to DB -> cache."
+          },
+          {
+            "timestamp_sec": 348.0,
+            "text": "Read path: client -> load balancer -> API server -> check cache -> if miss, check DB -> redirect."
+          },
+          {
+            "timestamp_sec": 435.0,
+            "text": "For the tradeoffs, I chose SQL over NoSQL because we need strong consistency for URL mappings."
+          }
+        ],
+        "noticed": {
+          "strength": "The candidate presented a clear and robust high-level architecture with well-justified component choices for scalability and consistency.",
+          "issue": "API design was largely overlooked, lacking explicit endpoints, data formats, or error handling considerations."
+        }
+      },
+      "strengths": [
+        {
+          "phase": "design",
+          "text": "Clear identification of core components with logical data flow between them, including stateless API servers.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "design",
+          "text": "Strong justification for PostgreSQL choice based on consistency requirements for URL mappings.",
+          "timestamp_sec": 435.0
+        },
+        {
+          "phase": "design",
+          "text": "Appropriate use of Redis for caching to handle the specified read-heavy traffic patterns.",
+          "timestamp_sec": 465.0
+        }
+      ],
+      "weaknesses": [
+        {
+          "phase": "design",
+          "text": "API design was almost entirely absent, missing endpoint definitions, HTTP methods, and request/response structures.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "design",
+          "text": "No discussion of critical API concerns like error handling, authentication, or rate limiting.",
+          "timestamp_sec": 515.0
+        },
+        {
+          "phase": "design",
+          "text": "The CDN layer was mentioned but not fully integrated into the detailed data flows or clearly justified within the architecture.",
+          "timestamp_sec": 362.0
+        }
+      ],
+      "highlights": [
+        {
+          "phase": "design",
+          "timestamp_sec": 332.0,
+          "text": "Write path: client -> load balancer -> API server -> generate short code -> write to DB -> cache."
+        },
+        {
+          "phase": "design",
+          "timestamp_sec": 435.0,
+          "text": "For the tradeoffs, I chose SQL over NoSQL because we need strong consistency for URL mappings."
+        }
+      ]
+    },
+    "phase:explain": {
+      "phase": "explain",
+      "score": 8.5,
+      "bullets": [
+        "Explicitly chose strong consistency for URL mappings, justified by user experience.",
+        "Compared counter-based vs random short codes, detailing uniqueness, performance, and security tradeoffs.",
+        "Identified the short code counter as a single point of failure and proposed distributed counters for high availability.",
+        "Suggested relevant improvements: rate limiting, async analytics, and geographic distribution.",
+        "Did not explicitly discuss Partition Tolerance or Availability in the context of the CAP theorem."
+      ],
+      "evidence": {
+        "phase": "explain",
+        "snapshot_url": "/uploads/test-submission/canvas_explain.png",
+        "transcripts": [
+          {
+            "timestamp_sec": 452.0,
+            "text": "A user should never get a wrong redirect - that would be terrible UX."
+          },
+          {
+            "timestamp_sec": 478.0,
+            "text": "For the counter-based approach versus random IDs, counters give us predictable performance"
+          },
+          {
+            "timestamp_sec": 492.0,
+            "text": "and guaranteed uniqueness without collision checks."
+          },
+          {
+            "timestamp_sec": 502.0,
+            "text": "However, they're sequential which could be a security concern."
+          },
+          {
+            "timestamp_sec": 568.0,
+            "text": "I'd need to think about distributed counters for true high availability."
+          }
+        ],
+        "noticed": {
+          "strength": "Excellent self-critique identifying critical SPOF and proposing concrete improvements.",
+          "issue": "CAP theorem discussion was incomplete, focusing primarily on Consistency without explicitly detailing Availability and Partition Tolerance."
+        }
+      },
+      "strengths": [
+        {
+          "phase": "explain",
+          "text": "Clear justification for strong consistency choice based on user experience impact.",
+          "timestamp_sec": 452.0
+        },
+        {
+          "phase": "explain",
+          "text": "Provided well-reasoned comparison between counter-based and random ID generation, highlighting pros and cons.",
+          "timestamp_sec": 492.0
+        },
+        {
+          "phase": "explain",
+          "text": "Identified the counter as a single point of failure and proposed distributed counters for high availability.",
+          "timestamp_sec": 568.0
+        }
+      ],
+      "weaknesses": [
+        {
+          "phase": "explain",
+          "text": "Did not explicitly discuss Availability or Partition Tolerance in the context of CAP theorem for core components.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "explain",
+          "text": "Could have elaborated more on the implementation details or challenges of distributed counters.",
+          "timestamp_sec": null
+        }
+      ],
+      "highlights": [
+        {
+          "phase": "explain",
+          "timestamp_sec": 452.0,
+          "text": "A user should never get a wrong redirect - that would be terrible UX."
+        },
+        {
+          "phase": "explain",
+          "timestamp_sec": 568.0,
+          "text": "I'd need to think about distributed counters for true high availability."
+        }
+      ]
+    },
+    "rubric_radar": {
+      "rubric": [
+        {
+          "label": "Requirements Clarity",
+          "description": "Ability to scope the problem and identify key requirements",
+          "score": 7.15,
+          "status": "partial",
+          "computed_from": [
+            "clarify",
+            "estimate"
+          ]
+        },
+        {
+          "label": "Capacity Estimation",
+          "description": "Accurate back-of-envelope calculations with stated assumptions",
+          "score": 7.3,
+          "status": "partial",
+          "computed_from": [
+            "estimate",
+            "design"
+          ]
+        },
+        {
+          "label": "System Design",
+          "description": "Clear architecture with appropriate component selection",
+          "score": 6.9,
+          "status": "partial",
+          "computed_from": [
+            "design",
+            "explain"
+          ]
+        },
+        {
+          "label": "Scalability Plan",
+          "description": "Concrete plans for handling scale and bottlenecks",
+          "score": 7.5,
+          "status": "partial",
+          "computed_from": [
+            "design",
+            "explain"
+          ]
+        },
+        {
+          "label": "Tradeoff Analysis",
+          "description": "Clear reasoning about technology choices and their tradeoffs",
+          "score": 8.3,
+          "status": "pass",
+          "computed_from": [
+            "explain",
+            "design"
+          ]
+        }
+      ],
+      "radar": [
+        {
+          "skill": "clarity",
+          "score": 7.15,
+          "label": "Clarity"
+        },
+        {
+          "skill": "structure",
+          "score": 7.05,
+          "label": "Structure"
+        },
+        {
+          "skill": "power",
+          "score": 7.3,
+          "label": "Power"
+        },
+        {
+          "skill": "wisdom",
+          "score": 7.75,
+          "label": "Wisdom"
+        }
+      ],
+      "overall_score": 7.375,
+      "verdict": "maybe",
+      "summary": "The candidate demonstrated a solid understanding of system design for a URL shortener, particularly excelling in **wisdom** by effectively analyzing tradeoffs and self-critiquing their solution's weaknesses. While the architecture was clear and capacity estimations mostly accurate, the design phase lacked detailed API specifications, and initial requirements clarification missed crucial explicit prompts like URL expiration. Overall, their performance suggests a 'maybe' for hire, indicating strong foundational skills but with room for improvement in comprehensive design detail and proactive requirement gathering."
+    },
+    "plan_outline": {
+      "next_attempt_plan": [
+        {
+          "what_went_wrong": "The candidate did not ask clarifying questions to the interviewer and missed explicitly addressing the 'URL expiration policies' requirement mentioned in the problem statement.",
+          "do_next_time": "\u2022 Start by asking clarifying questions about user types, specific functional needs (e.g., custom URLs), and non-functional requirements (e.g., specific latency targets, consistency levels).\n\u2022 Address all explicit requirements from the prompt, specifically probing into URL expiration policies (e.g., types of expiration, implementation implications).\n\u2022 Discuss potential edge cases, abuse scenarios (e.g., invalid URLs, malicious redirects), and how they might impact the design."
+        },
+        {
+          "what_went_wrong": "The API design was largely overlooked, lacking explicit endpoints, request/response formats, and critical concerns like error handling or authentication. The CDN mention was not fully integrated into the data flows.",
+          "do_next_time": "\u2022 Define specific API endpoints (e.g., POST /api/v1/shorten, GET /{shortCode}) with HTTP methods, request/response payload examples, and expected status codes.\n\u2022 Outline robust error handling strategies, including specific HTTP error codes and descriptive messages for various scenarios (e.g., invalid URL, service unavailable).\n\u2022 Clearly explain how the CDN fits into the read path, what content it caches, and how cache invalidation or update strategies would work (e.g., for hot URLs)."
+        },
+        {
+          "what_went_wrong": "While storage and short code space were well-estimated, the candidate missed estimating critical metrics like network bandwidth, database IOPS, and lacked a justified breakdown for the number of application servers.",
+          "do_next_time": "\u2022 Calculate network bandwidth requirements for both incoming (shorten requests) and outgoing (redirects, especially for large responses or if CDN isn't fully utilized).\n\u2022 Estimate database read/write IOPS and memory requirements, considering the cache hit ratio and data access patterns.\n\u2022 Justify the number of application servers by estimating the QPS or throughput a single server can handle and then scaling accordingly for peak load."
+        }
+      ],
+      "follow_up_questions": [
+        "Given the 100:1 read-to-write ratio and a need for strong consistency, how would you design your database schema and indexing strategy to optimize for read performance while efficiently handling URL expiration?",
+        "You identified the counter as a single point of failure for short code generation. How would you design a highly available, fault-tolerant, and horizontally scalable distributed counter service to address this and ensure unique short codes without collisions?",
+        "Beyond simple redirects, how would you collect, store, and process click analytics data without impacting the primary redirect latency? What types of queries or reports would users typically want from this data?",
+        "How would you handle URL revocation or custom short codes, and what impact would these features have on your existing design, particularly the cache invalidation strategy and database schema?"
+      ],
+      "reference_outline": {
+        "sections": [
+          {
+            "section": "1. Functional & Non-Functional Requirements",
+            "bullets": [
+              "Shorten long URL to unique, short URL",
+              "Redirect short URL to original long URL with low latency",
+              "URL expiration policy (configurable by user/system)",
+              "Optional: Click analytics per short URL (async processing)",
+              "High availability (99.99%) & fault tolerance",
+              "Scalability: 100M URLs stored, 10B redirects/month (avg 4K QPS)"
+            ]
+          },
+          {
+            "section": "2. Capacity Estimation",
+            "bullets": [
+              "Storage: 100M URLs * ~500 bytes/entry (incl. metadata) = ~50 GB",
+              "Redirect QPS: 10B/month (avg 4K QPS, peak 12K QPS)",
+              "Write QPS: 100M URLs/month (avg 40 QPS)",
+              "Short Code Space: 6-char Base62 (62^6 \u2248 56 Billion unique codes)",
+              "Bandwidth: Minimal for redirects (HTTP 302 header), negligible for writes",
+              "Server Count: ~10-20 API servers (assuming 1000-2000 QPS/server) + database/cache nodes"
+            ]
+          },
+          {
+            "section": "3. High-Level Architecture",
+            "bullets": [
+              "Load Balancer (e.g., Nginx, AWS ELB)",
+              "Stateless API Gateway / Web Servers (e.g., Go/Java microservices)",
+              "Distributed Cache (e.g., Redis Cluster) for hot URL mappings",
+              "Primary Data Store (e.g., PostgreSQL or CockroachDB) for durable URL mappings",
+              "Distributed Short Code Generation Service (e.g., dedicated counter service, Snowflake-like IDs)",
+              "Asynchronous Analytics Pipeline (e.g., Kafka, Spark/Flink, OLAP DB for reporting)"
+            ]
+          },
+          {
+            "section": "4. Deep Dive: Key Components",
+            "bullets": [
+              "**Short Code Generation:** Counter-based with Base62 encoding (partitioned/distributed counter) or random hash with collision resolution.",
+              "**Database Schema:** `short_code (PK), long_url (UNIQUE INDEX), user_id, created_at, expires_at, click_count`.",
+              "**Redirect Service:** Check cache -> if miss, check DB -> HTTP 302 redirect -> async log click.",
+              "**Expiration Policy:** Background cron job or TTL on database/cache entries for cleanup.",
+              "**Cache Strategy:** Write-through cache for new URLs, LRU for read-heavy redirects, pre-warm for popular URLs."
+            ]
+          },
+          {
+            "section": "5. Scalability & Reliability",
+            "bullets": [
+              "Horizontal scaling of API servers, cache nodes, and database read replicas.",
+              "Database sharding (e.g., by short code prefix or range) for write/read distribution.",
+              "Redundancy at all layers (multi-AZ deployment, automatic failover for DB/cache).",
+              "Rate limiting on 'shorten' API to prevent abuse and ensure service stability.",
+              "Global distribution via CDN for 'hot' redirects and geo-distributed read replicas for lower latency."
+            ]
+          },
+          {
+            "section": "6. Tradeoffs & Future Enhancements",
+            "bullets": [
+              "**Consistency:** Strong consistency for URL mapping (PostgreSQL) vs. eventual for analytics.",
+              "**Short Code Generation:** Predictable (counter) vs. truly random (collision handling).",
+              "**Storage:** SQL (schema, ACID) vs. NoSQL (scalability, flexibility for metadata).",
+              "**Future:** Custom short codes, user accounts, security features (URL blacklisting), advanced analytics dashboards, API authentication."
+            ]
+          }
+        ]
+      }
+    },
+    "final_report_v2": {
+      "result_version": 2,
+      "submission_id": "test-submission-id-123",
+      "problem": {
+        "id": "design-a-url-shortener",
+        "name": "Design a URL Shortener",
+        "difficulty": "apprentice"
+      },
+      "phase_times": {
+        "clarify": 90,
+        "estimate": 120,
+        "design": 180,
+        "explain": 150
+      },
+      "created_at": "2026-02-08T10:00:00Z",
+      "completed_at": "2026-02-08T10:08:00Z",
+      "phase_scores": [
+        {
+          "phase": "clarify",
+          "score": 7.0,
+          "bullets": [
+            "Identified core functional requirements (URL shortening, redirection) from the prompt.",
+            "Quickly derived quantitative scale metrics (4000 redirects/sec, 100:1 read/write ratio) based on problem constraints.",
+            "Clearly distinguished MVP scope (basic shortening and redirection) from an optional feature (analytics).",
+            "Did not ask any clarifying questions to the interviewer about constraints, edge cases, or user personas.",
+            "Missed the opportunity to probe into URL expiration policies, which was explicitly mentioned in the problem statement."
+          ]
+        },
+        {
+          "phase": "estimate",
+          "score": 7.5,
+          "bullets": [
+            "Accurately calculated storage requirements for 100M URLs (50GB) with a stated assumption of 500 bytes/URL.",
+            "Correctly determined the addressable space for 6-character base62 short codes (56 billion combinations).",
+            "Acknowledged the previously derived 4000 redirects/sec (QPS) as a primary driver for the system's read-heavy nature.",
+            "The application server estimate (3-5 servers) was a 'magic number' without detailed justification based on throughput or resource utilization.",
+            "Did not estimate bandwidth, database IOPS, or specific cache memory requirements beyond mentioning Redis for hot URLs."
+          ]
+        },
+        {
+          "phase": "design",
+          "score": 6.5,
+          "bullets": [
+            "Clear high-level architecture with load balancer, stateless API servers, PostgreSQL, and Redis cache",
+            "Well-defined read and write data flows showing how requests are processed through the components",
+            "Appropriate component choices: SQL for strong consistency, Redis for read-heavy caching",
+            "Strong justification for technology selections, including tradeoffs of the chosen short code generation method",
+            "CDN layer was mentioned but not fully integrated into the architecture's data flow or rationale",
+            "API design was minimal, lacking explicit endpoints, request/response formats, error handling, or authentication"
+          ]
+        },
+        {
+          "phase": "explain",
+          "score": 8.5,
+          "bullets": [
+            "Explicitly chose strong consistency for URL mappings, justified by user experience.",
+            "Compared counter-based vs random short codes, detailing uniqueness, performance, and security tradeoffs.",
+            "Identified the short code counter as a single point of failure and proposed distributed counters for high availability.",
+            "Suggested relevant improvements: rate limiting, async analytics, and geographic distribution.",
+            "Did not explicitly discuss Partition Tolerance or Availability in the context of the CAP theorem."
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "phase": "clarify",
+          "snapshot_url": "/uploads/test-submission/canvas_clarify.png",
+          "transcripts": [
+            {
+              "timestamp_sec": 12.0,
+              "text": "So for this URL shortener, let me first understand the requirements."
+            },
+            {
+              "timestamp_sec": 25.0,
+              "text": "We need to support shortening long URLs to short ones."
+            },
+            {
+              "timestamp_sec": 38.0,
+              "text": "For scale, I'm thinking about 100 million URLs stored, maybe 10 billion redirects per month."
+            },
+            {
+              "timestamp_sec": 52.0,
+              "text": "That's about 4000 redirects per second on average."
+            },
+            {
+              "timestamp_sec": 65.0,
+              "text": "The read to write ratio is probably 100:1 since redirects happen way more than creating new URLs."
+            },
+            {
+              "timestamp_sec": 78.0,
+              "text": "For the MVP, I'll focus on basic shortening and redirecting."
+            },
+            {
+              "timestamp_sec": 88.0,
+              "text": "Analytics can be a Phase 2 feature."
+            }
+          ],
+          "noticed": {
+            "strength": "Candidate efficiently extracted key requirements and derived quantitative metrics from the problem statement.",
+            "issue": "The candidate stated their understanding and derivations but did not ask any clarifying questions to the interviewer."
+          }
+        },
+        {
+          "phase": "estimate",
+          "snapshot_url": "/uploads/test-submission/canvas_estimate.png",
+          "transcripts": [
+            {
+              "timestamp_sec": 135.0,
+              "text": "Let me do some back-of-envelope calculations."
+            },
+            {
+              "timestamp_sec": 148.0,
+              "text": "For 100 million URLs, if each URL is about 500 bytes with metadata,"
+            },
+            {
+              "timestamp_sec": 162.0,
+              "text": "that's 50 GB of storage - very manageable."
+            },
+            {
+              "timestamp_sec": 175.0,
+              "text": "For 4000 redirects per second, we need a read-heavy database."
+            },
+            {
+              "timestamp_sec": 188.0,
+              "text": "If we want 6 character short codes with base62, that's 56 billion combinations."
+            },
+            {
+              "timestamp_sec": 202.0,
+              "text": "We could use a key-value store like Redis for hot URLs."
+            },
+            {
+              "timestamp_sec": 215.0,
+              "text": "I estimate we need maybe 3-5 application servers behind a load balancer."
+            }
+          ],
+          "noticed": {
+            "strength": "Strong mathematical accuracy in storage and short code space calculations with clear assumptions.",
+            "issue": "Server count estimate lacked detailed justification, and several other capacity dimensions were not addressed."
+          }
+        },
+        {
+          "phase": "design",
+          "snapshot_url": "/uploads/test-submission/canvas_design.png",
+          "transcripts": [
+            {
+              "timestamp_sec": 255.0,
+              "text": "Here's my high-level architecture."
+            },
+            {
+              "timestamp_sec": 265.0,
+              "text": "At the top, we have a load balancer distributing traffic."
+            },
+            {
+              "timestamp_sec": 278.0,
+              "text": "Behind that, I have stateless API servers handling both read and write requests."
+            },
+            {
+              "timestamp_sec": 292.0,
+              "text": "For the database layer, I'm using a primary SQL database like PostgreSQL for durability."
+            },
+            {
+              "timestamp_sec": 305.0,
+              "text": "In front of that, a Redis cache layer for frequently accessed URLs."
+            },
+            {
+              "timestamp_sec": 318.0,
+              "text": "For short code generation, I'll use a counter-based approach with base62 encoding."
+            },
+            {
+              "timestamp_sec": 332.0,
+              "text": "Write path: client -> load balancer -> API server -> generate short code -> write to DB -> cache."
+            },
+            {
+              "timestamp_sec": 348.0,
+              "text": "Read path: client -> load balancer -> API server -> check cache -> if miss, check DB -> redirect."
+            },
+            {
+              "timestamp_sec": 362.0,
+              "text": "I'm also adding a CDN layer for the absolute hottest URLs."
+            }
+          ],
+          "noticed": {
+            "strength": "The candidate presented a clear and robust high-level architecture with well-justified component choices for scalability and consistency.",
+            "issue": "API design was largely overlooked, lacking explicit endpoints, data formats, or error handling considerations."
+          }
+        },
+        {
+          "phase": "explain",
+          "snapshot_url": "/uploads/test-submission/canvas_explain.png",
+          "transcripts": [
+            {
+              "timestamp_sec": 435.0,
+              "text": "For the tradeoffs, I chose SQL over NoSQL because we need strong consistency for URL mappings."
+            },
+            {
+              "timestamp_sec": 452.0,
+              "text": "A user should never get a wrong redirect - that would be terrible UX."
+            },
+            {
+              "timestamp_sec": 465.0,
+              "text": "Redis as cache is a classic choice for read-heavy workloads."
+            },
+            {
+              "timestamp_sec": 478.0,
+              "text": "For the counter-based approach versus random IDs, counters give us predictable performance"
+            },
+            {
+              "timestamp_sec": 492.0,
+              "text": "and guaranteed uniqueness without collision checks."
+            },
+            {
+              "timestamp_sec": 502.0,
+              "text": "However, they're sequential which could be a security concern."
+            },
+            {
+              "timestamp_sec": 515.0,
+              "text": "If I had more time, I'd add rate limiting to prevent abuse,"
+            },
+            {
+              "timestamp_sec": 528.0,
+              "text": "implement the analytics feature with an async message queue,"
+            },
+            {
+              "timestamp_sec": 542.0,
+              "text": "and add geographic distribution for lower latency globally."
+            },
+            {
+              "timestamp_sec": 555.0,
+              "text": "One weakness of my design is that the counter is a single point of failure -"
+            },
+            {
+              "timestamp_sec": 568.0,
+              "text": "I'd need to think about distributed counters for true high availability."
+            }
+          ],
+          "noticed": {
+            "strength": "Excellent self-critique identifying critical SPOF and proposing concrete improvements.",
+            "issue": "CAP theorem discussion was incomplete, focusing primarily on Consistency without explicitly detailing Availability and Partition Tolerance."
+          }
+        }
+      ],
+      "rubric": [
+        {
+          "label": "Requirements Clarity",
+          "description": "Ability to scope the problem and identify key requirements",
+          "score": 7.15,
+          "status": "partial",
+          "computed_from": [
+            "clarify",
+            "estimate"
+          ]
+        },
+        {
+          "label": "Capacity Estimation",
+          "description": "Accurate back-of-envelope calculations with stated assumptions",
+          "score": 7.3,
+          "status": "partial",
+          "computed_from": [
+            "estimate",
+            "design"
+          ]
+        },
+        {
+          "label": "System Design",
+          "description": "Clear architecture with appropriate component selection",
+          "score": 6.9,
+          "status": "partial",
+          "computed_from": [
+            "design",
+            "explain"
+          ]
+        },
+        {
+          "label": "Scalability Plan",
+          "description": "Concrete plans for handling scale and bottlenecks",
+          "score": 7.5,
+          "status": "partial",
+          "computed_from": [
+            "design",
+            "explain"
+          ]
+        },
+        {
+          "label": "Tradeoff Analysis",
+          "description": "Clear reasoning about technology choices and their tradeoffs",
+          "score": 8.3,
+          "status": "pass",
+          "computed_from": [
+            "explain",
+            "design"
+          ]
+        }
+      ],
+      "radar": [
+        {
+          "skill": "clarity",
+          "score": 7.15,
+          "label": "Clarity"
+        },
+        {
+          "skill": "structure",
+          "score": 7.05,
+          "label": "Structure"
+        },
+        {
+          "skill": "power",
+          "score": 7.3,
+          "label": "Power"
+        },
+        {
+          "skill": "wisdom",
+          "score": 7.75,
+          "label": "Wisdom"
+        }
+      ],
+      "overall_score": 7.375,
+      "verdict": "maybe",
+      "summary": "The candidate demonstrated a solid understanding of system design for a URL shortener, particularly excelling in **wisdom** by effectively analyzing tradeoffs and self-critiquing their solution's weaknesses. While the architecture was clear and capacity estimations mostly accurate, the design phase lacked detailed API specifications, and initial requirements clarification missed crucial explicit prompts like URL expiration. Overall, their performance suggests a 'maybe' for hire, indicating strong foundational skills but with room for improvement in comprehensive design detail and proactive requirement gathering.",
+      "strengths": [
+        {
+          "phase": "clarify",
+          "text": "Immediately recognized scale constraints and derived key metrics (QPS, read/write ratio) from the problem description.",
+          "timestamp_sec": 52.0
+        },
+        {
+          "phase": "clarify",
+          "text": "Clearly prioritized MVP features (basic shortening/redirection) vs. optional analytics.",
+          "timestamp_sec": 78.0
+        },
+        {
+          "phase": "estimate",
+          "text": "Accurately calculated storage requirements with clearly stated assumptions (500 bytes/URL).",
+          "timestamp_sec": 162.0
+        },
+        {
+          "phase": "estimate",
+          "text": "Demonstrated understanding of short code addressable space by correctly calculating 6-char base62 combinations.",
+          "timestamp_sec": 188.0
+        },
+        {
+          "phase": "estimate",
+          "text": "Reiterated the high QPS (4000 redirects/sec) and read-heavy pattern, linking it to system needs (read-heavy database).",
+          "timestamp_sec": 175.0
+        },
+        {
+          "phase": "design",
+          "text": "Clear identification of core components with logical data flow between them, including stateless API servers.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "design",
+          "text": "Strong justification for PostgreSQL choice based on consistency requirements for URL mappings.",
+          "timestamp_sec": 435.0
+        },
+        {
+          "phase": "design",
+          "text": "Appropriate use of Redis for caching to handle the specified read-heavy traffic patterns.",
+          "timestamp_sec": 465.0
+        },
+        {
+          "phase": "explain",
+          "text": "Clear justification for strong consistency choice based on user experience impact.",
+          "timestamp_sec": 452.0
+        },
+        {
+          "phase": "explain",
+          "text": "Provided well-reasoned comparison between counter-based and random ID generation, highlighting pros and cons.",
+          "timestamp_sec": 492.0
+        },
+        {
+          "phase": "explain",
+          "text": "Identified the counter as a single point of failure and proposed distributed counters for high availability.",
+          "timestamp_sec": 568.0
+        }
+      ],
+      "weaknesses": [
+        {
+          "phase": "clarify",
+          "text": "Did not ask any clarifying questions about problem scope, constraints, or potential edge cases (e.g., invalid URLs, abuse).",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "clarify",
+          "text": "Failed to explicitly address or clarify the 'URL expiration policies' requirement mentioned in the prompt.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "estimate",
+          "text": "Server count estimate (3-5) lacked detailed breakdown or justification based on throughput per server or resource utilization.",
+          "timestamp_sec": 215.0
+        },
+        {
+          "phase": "estimate",
+          "text": "Did not estimate bandwidth, database IOPS, or explicitly size cache memory requirements for 'hot URLs'.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "design",
+          "text": "API design was almost entirely absent, missing endpoint definitions, HTTP methods, and request/response structures.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "design",
+          "text": "No discussion of critical API concerns like error handling, authentication, or rate limiting.",
+          "timestamp_sec": 515.0
+        },
+        {
+          "phase": "design",
+          "text": "The CDN layer was mentioned but not fully integrated into the detailed data flows or clearly justified within the architecture.",
+          "timestamp_sec": 362.0
+        },
+        {
+          "phase": "explain",
+          "text": "Did not explicitly discuss Availability or Partition Tolerance in the context of CAP theorem for core components.",
+          "timestamp_sec": null
+        },
+        {
+          "phase": "explain",
+          "text": "Could have elaborated more on the implementation details or challenges of distributed counters.",
+          "timestamp_sec": null
+        }
+      ],
+      "highlights": [
+        {
+          "phase": "clarify",
+          "timestamp_sec": 52.0,
+          "text": "That's about 4000 redirects per second on average."
+        },
+        {
+          "phase": "clarify",
+          "timestamp_sec": 78.0,
+          "text": "For the MVP, I'll focus on basic shortening and redirecting."
+        },
+        {
+          "phase": "estimate",
+          "timestamp_sec": 162.0,
+          "text": "that's 50 GB of storage - very manageable."
+        },
+        {
+          "phase": "estimate",
+          "timestamp_sec": 188.0,
+          "text": "If we want 6 character short codes with base62, that's 56 billion combinations."
+        },
+        {
+          "phase": "design",
+          "timestamp_sec": 332.0,
+          "text": "Write path: client -> load balancer -> API server -> generate short code -> write to DB -> cache."
+        },
+        {
+          "phase": "design",
+          "timestamp_sec": 435.0,
+          "text": "For the tradeoffs, I chose SQL over NoSQL because we need strong consistency for URL mappings."
+        },
+        {
+          "phase": "explain",
+          "timestamp_sec": 452.0,
+          "text": "A user should never get a wrong redirect - that would be terrible UX."
+        },
+        {
+          "phase": "explain",
+          "timestamp_sec": 568.0,
+          "text": "I'd need to think about distributed counters for true high availability."
+        }
+      ],
+      "next_attempt_plan": [
+        {
+          "what_went_wrong": "The candidate did not ask clarifying questions to the interviewer and missed explicitly addressing the 'URL expiration policies' requirement mentioned in the problem statement.",
+          "do_next_time": "\u2022 Start by asking clarifying questions about user types, specific functional needs (e.g., custom URLs), and non-functional requirements (e.g., specific latency targets, consistency levels).\n\u2022 Address all explicit requirements from the prompt, specifically probing into URL expiration policies (e.g., types of expiration, implementation implications).\n\u2022 Discuss potential edge cases, abuse scenarios (e.g., invalid URLs, malicious redirects), and how they might impact the design."
+        },
+        {
+          "what_went_wrong": "The API design was largely overlooked, lacking explicit endpoints, request/response formats, and critical concerns like error handling or authentication. The CDN mention was not fully integrated into the data flows.",
+          "do_next_time": "\u2022 Define specific API endpoints (e.g., POST /api/v1/shorten, GET /{shortCode}) with HTTP methods, request/response payload examples, and expected status codes.\n\u2022 Outline robust error handling strategies, including specific HTTP error codes and descriptive messages for various scenarios (e.g., invalid URL, service unavailable).\n\u2022 Clearly explain how the CDN fits into the read path, what content it caches, and how cache invalidation or update strategies would work (e.g., for hot URLs)."
+        },
+        {
+          "what_went_wrong": "While storage and short code space were well-estimated, the candidate missed estimating critical metrics like network bandwidth, database IOPS, and lacked a justified breakdown for the number of application servers.",
+          "do_next_time": "\u2022 Calculate network bandwidth requirements for both incoming (shorten requests) and outgoing (redirects, especially for large responses or if CDN isn't fully utilized).\n\u2022 Estimate database read/write IOPS and memory requirements, considering the cache hit ratio and data access patterns.\n\u2022 Justify the number of application servers by estimating the QPS or throughput a single server can handle and then scaling accordingly for peak load."
+        }
+      ],
+      "follow_up_questions": [
+        "Given the 100:1 read-to-write ratio and a need for strong consistency, how would you design your database schema and indexing strategy to optimize for read performance while efficiently handling URL expiration?",
+        "You identified the counter as a single point of failure for short code generation. How would you design a highly available, fault-tolerant, and horizontally scalable distributed counter service to address this and ensure unique short codes without collisions?",
+        "Beyond simple redirects, how would you collect, store, and process click analytics data without impacting the primary redirect latency? What types of queries or reports would users typically want from this data?",
+        "How would you handle URL revocation or custom short codes, and what impact would these features have on your existing design, particularly the cache invalidation strategy and database schema?"
+      ],
+      "reference_outline": {
+        "sections": [
+          {
+            "section": "1. Functional & Non-Functional Requirements",
+            "bullets": [
+              "Shorten long URL to unique, short URL",
+              "Redirect short URL to original long URL with low latency",
+              "URL expiration policy (configurable by user/system)",
+              "Optional: Click analytics per short URL (async processing)",
+              "High availability (99.99%) & fault tolerance",
+              "Scalability: 100M URLs stored, 10B redirects/month (avg 4K QPS)"
+            ]
+          },
+          {
+            "section": "2. Capacity Estimation",
+            "bullets": [
+              "Storage: 100M URLs * ~500 bytes/entry (incl. metadata) = ~50 GB",
+              "Redirect QPS: 10B/month (avg 4K QPS, peak 12K QPS)",
+              "Write QPS: 100M URLs/month (avg 40 QPS)",
+              "Short Code Space: 6-char Base62 (62^6 \u2248 56 Billion unique codes)",
+              "Bandwidth: Minimal for redirects (HTTP 302 header), negligible for writes",
+              "Server Count: ~10-20 API servers (assuming 1000-2000 QPS/server) + database/cache nodes"
+            ]
+          },
+          {
+            "section": "3. High-Level Architecture",
+            "bullets": [
+              "Load Balancer (e.g., Nginx, AWS ELB)",
+              "Stateless API Gateway / Web Servers (e.g., Go/Java microservices)",
+              "Distributed Cache (e.g., Redis Cluster) for hot URL mappings",
+              "Primary Data Store (e.g., PostgreSQL or CockroachDB) for durable URL mappings",
+              "Distributed Short Code Generation Service (e.g., dedicated counter service, Snowflake-like IDs)",
+              "Asynchronous Analytics Pipeline (e.g., Kafka, Spark/Flink, OLAP DB for reporting)"
+            ]
+          },
+          {
+            "section": "4. Deep Dive: Key Components",
+            "bullets": [
+              "**Short Code Generation:** Counter-based with Base62 encoding (partitioned/distributed counter) or random hash with collision resolution.",
+              "**Database Schema:** `short_code (PK), long_url (UNIQUE INDEX), user_id, created_at, expires_at, click_count`.",
+              "**Redirect Service:** Check cache -> if miss, check DB -> HTTP 302 redirect -> async log click.",
+              "**Expiration Policy:** Background cron job or TTL on database/cache entries for cleanup.",
+              "**Cache Strategy:** Write-through cache for new URLs, LRU for read-heavy redirects, pre-warm for popular URLs."
+            ]
+          },
+          {
+            "section": "5. Scalability & Reliability",
+            "bullets": [
+              "Horizontal scaling of API servers, cache nodes, and database read replicas.",
+              "Database sharding (e.g., by short code prefix or range) for write/read distribution.",
+              "Redundancy at all layers (multi-AZ deployment, automatic failover for DB/cache).",
+              "Rate limiting on 'shorten' API to prevent abuse and ensure service stability.",
+              "Global distribution via CDN for 'hot' redirects and geo-distributed read replicas for lower latency."
+            ]
+          },
+          {
+            "section": "6. Tradeoffs & Future Enhancements",
+            "bullets": [
+              "**Consistency:** Strong consistency for URL mapping (PostgreSQL) vs. eventual for analytics.",
+              "**Short Code Generation:** Predictable (counter) vs. truly random (collision handling).",
+              "**Storage:** SQL (schema, ACID) vs. NoSQL (scalability, flexibility for metadata).",
+              "**Future:** Custom short codes, user accounts, security features (URL blacklisting), advanced analytics dashboards, API authentication."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "raw_response_preview": "{\n  \"phase\": \"explain\",\n  \"score\": 8.5,\n  \"bullets\": [\n    \"Explicitly chose strong consistency for URL mappings, justified by user experience.\",\n    \"Compared counter-based vs random short codes, detailing uniqueness, performance, and security tradeoffs.\",\n    \"Identified the short code counter as a single point of failure and proposed distributed counters for high availability.\",\n    \"Suggested relevant improvements: rate limiting, async analytics, and geographic distribution.\",\n    \"Did not explicitly discuss Partition Tolerance or Availability in the context of the CAP theorem.\"\n  ],\n  \"evidence\": {\n    \"phase\": \"explain\",\n    \"snapshot_url\": \"/uploads/test-submission/canvas_explain.png\",\n    \"transcripts\": [\n      {\n        \"timestamp_sec\": 452.0,\n        \"text\": \"A user should never get a wrong redirect - that would be terrible UX.\"\n      },\n      {\n        \"timestamp_sec\": 478.0,\n        \"text\": \"For the counter-based approach versus random IDs, counters give us predictable performance\"\n      },\n      {\n        \"timestamp_sec\": 492.0,\n        \"text\": \"and guaranteed uniqueness without collision checks.\"\n      },\n      {\n        \"timestamp_sec\": 502.0,\n        \"text\": \"However, they're sequential which could be a security concern.\"\n      },\n      {\n        \"timestamp_sec\": 568.0,\n        \"text\": \"I'd need to think about distributed counters for true high availability.\"\n      }\n    ],\n    \"noticed\": {\n      \"strength\": \"Excellent self-critique identifying critical SPOF and proposing concrete improvements.\",\n      \"issue\": \"CAP theorem discussion was incomplete, focusing primarily on Consistency without explicitly detailing Availability and Partition Tolerance.\"\n    }\n  },\n  \"strengths\": [\n    {\n      \"phase\": \"explain\",\n      \"text\": \"Clear justification for strong consistency choice based on user experience impact.\",\n      \"timestamp_sec\": 452.0\n    },\n    {\n      \"phase\": \"explain\",\n      \"text\": \"Provided well-reasoned comparison between counter-based and random ID generation, highlighting pros and cons.\",\n      \"timestamp_sec\": 492.0\n    },\n    {\n      \"phase\": \"explain\",\n      \"text\": \"Identified the counter as a single point of failure and proposed distributed counters for high availability.\",\n      \"timestamp_sec\": 568.0\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"phase\": \"explain\",\n      \"text\": \"Did not explicitly discuss Availability or Partition Tolerance in the context of CAP theorem for core components.\",\n      \"timestamp_sec\": null\n    },\n    {\n      \"phase\": \"explain\",\n      \"text\": \"Could have elaborated more on the implementation details or challenges of distributed counters.\",\n      \"timestamp_sec\": null\n    }\n  ],\n  \"highlights\": [\n    {\n      \"phase\": \"explain\",\n      \"timestamp_sec\": 452.0,\n      \"text\": \"A user should never get a wrong redirect - that would be terrible UX.\"\n    },\n    {\n      \"phase\": \"explain\",\n      \"timestamp_sec\": 568.0,\n      \"text\": \"I'd need to think about distributed counters for true high availability.\"\n    }\n  ]\n}\n---\n{\n  \"phase\": \"clarify\",\n  \"score\": 7.0,\n  \"bullets\": [\n    \"Identified core functional requirements (URL shortening, redirection) from the prompt.\",\n    \"Quickly derived quantitative scale metrics (4000 redirects/sec, 100:1 read/write ratio) based on problem constraints.\",\n    \"Clearly distinguished MVP scope (basic shortening and redirection) from an optional feature (analytics).\",\n    \"Did not ask any clarifying questions to the interviewer about constraints, edge cases, or user personas.\",\n    \"Missed the opportunity to probe into URL expiration policies, which was explicitly mentioned in the problem statement.\"\n  ],\n  \"evidence\": {\n    \"phase\": \"clarify\",\n    \"snapshot_url\": \"/uploads/test-submission/canvas_clarify.png\",\n    \"transcripts\": [\n      {\n        \"timestamp_sec\": 12.0,\n        \"text\": \"So for this URL shortener, let me first understand the requirements.\"\n      },\n      {\n        \"timestamp_sec\": 25.0,\n        \"text\": \"We need to support shortening long URLs to short ones.\"\n      },\n      {\n        \"timestamp_sec\": 38.0,\n        \"text\": \"For scale, I'm thinking about 100 million URLs stored, maybe 10 billion redirects per month.\"\n      },\n      {\n        \"timestamp_sec\": 52.0,\n        \"text\": \"That's about 4000 redirects per second on average.\"\n      },\n      {\n        \"timestamp_sec\": 65.0,\n        \"text\": \"The read to write ratio is probably 100:1 since redirects happen way more than creating new URLs.\"\n      },\n      {\n        \"timestamp_sec\": 78.0,\n        \"text\": \"For the MVP, I'll focus on basic shortening and redirecting.\"\n      },\n      {\n        \"timestamp_sec\": 88.0,\n        \"text\": \"Analytics can be a Phase 2 feature.\"\n      }\n    ],\n    \"noticed\": {\n      \"strength\": \"Candidate efficiently extracted key requirements and derived quantitative metrics from the problem statement.\",\n      \"issue\": \"The candidate stated their understanding and derivations but did not ask any clarifying questions to the interviewer.\"\n    }\n"
+}
