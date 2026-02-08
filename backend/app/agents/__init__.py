@@ -8,16 +8,29 @@ from .scoping_agent import scoping_agent
 from .synthesis_agent import synthesis_agent
 from .tradeoff_agent import tradeoff_agent
 
+# Phase agents (v2)
+from .phase_agents import (
+    create_clarify_phase_agent,
+    create_design_phase_agent,
+    create_estimate_phase_agent,
+    create_explain_phase_agent,
+)
+
 __all__ = [
     # Pipeline and orchestrators
     "grading_pipeline",
     "parallel_evaluation_agent",
-    # Individual agents
+    # Individual agents (v1)
     "scoping_agent",
     "design_agent",
     "scale_agent",
     "tradeoff_agent",
     "synthesis_agent",
+    # Phase agents (v2)
+    "create_clarify_phase_agent",
+    "create_estimate_phase_agent",
+    "create_design_phase_agent",
+    "create_explain_phase_agent",
     # Utilities
     "AgentResult",
     "DEFAULT_MODEL",

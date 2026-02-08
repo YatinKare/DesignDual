@@ -227,7 +227,7 @@ Based on the PRD, the backend needs:
 - [x] 6.11: Non-unit smoke test by running `uv run python -m app.agents.test_pipeline` and inspecting `backend/temp/agent_test_results.json`
 
 ### Phase 7: Agentic System v2 (Screen 2 Contract Compliant)
-- [ ] 7.1: Shift to phase-first grading with 4 phase agents (clarify/estimate/design/explain)
+- [x] 7.1: Shift to phase-first grading with 4 phase agents (clarify/estimate/design/explain)
 - [ ] 7.2: Add ParallelAgent for phase agents + SequentialAgent orchestration (GradingPipelineV2)
 - [ ] 7.3: Implement RubricRadarAgent (rubric + radar + overall_score + verdict + summary)
 - [ ] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
@@ -340,6 +340,30 @@ Based on PRD milestone: Backend agents should take ~5 hours (hours 10-15)
 **Total**: ~16 hours for full backend
 
 ## Completed This Iteration
+- Task 7.1: Created 4 phase-based grading agents for v2 contract compliance.
+  - **Created** `backend/app/agents/phase_agents.py` with all 4 phase agents:
+    1. `create_clarify_phase_agent()` - Evaluates requirements gathering and problem scoping (clarify phase)
+    2. `create_estimate_phase_agent()` - Evaluates capacity estimation and calculations (estimate phase)
+    3. `create_design_phase_agent()` - Evaluates high-level architecture, components, API design (design phase)
+    4. `create_explain_phase_agent()` - Evaluates tradeoff analysis, CAP theorem, self-critique (explain phase)
+  - **Agent Design**:
+    - Each agent grades only its assigned phase (no cross-phase evaluation)
+    - Outputs conform to v2 internal contract: `{phase, score, bullets, evidence, strengths, weaknesses, highlights}`
+    - Uses structured JSON output via `generate_content_config=JSON_RESPONSE_CONFIG`
+    - Prompts reference transcript timestamps when calling out specific moments
+    - Produces exactly 1 EvidenceItem per phase with snapshot URL + timestamped transcripts
+    - Outputs 3-6 concise feedback bullets per phase
+    - Identifies 1-3 strengths and 1-2 weaknesses (timestamped when possible)
+    - Extracts 0-2 highlights (key quotes from transcripts)
+  - **Evaluation Criteria**:
+    - **ClarifyPhaseAgent**: Requirements gathering, problem scoping, clarifying questions
+    - **EstimatePhaseAgent**: Capacity estimation accuracy, calculation rigor, stated assumptions
+    - **DesignPhaseAgent**: Architecture clarity, component selection, API design
+    - **ExplainPhaseAgent**: CAP theorem understanding, technology tradeoffs, self-critique
+  - **Updated** `backend/app/agents/__init__.py` to export all 4 phase agent creators
+  - **Validation**: All agents import successfully and can be instantiated ✅
+
+## Completed Previously
 - Task 6.11: Successfully ran smoke test for agent pipeline validation.
   - Executed `uv run python -m app.agents.test_pipeline` from backend directory
   - Test results saved to: `backend/temp/agent_test_results.json`
