@@ -222,7 +222,7 @@ Based on the PRD, the backend needs:
 - [x] 6.6: Set submission status lifecycle: queued -> processing
 - [x] 6.7: Standardize SSE stream statuses to new phase list + include optional progress/phase
 - [x] 6.8: Upgrade GET /api/submissions/{id} to full SubmissionResultV2 payload + result_version
-- [ ] 6.9: Add compatibility mapping for legacy stream statuses
+- [x] 6.9: Add compatibility mapping for legacy stream statuses
 - [ ] 6.10: Add/adjust storage tables: submissions, submission_artifacts, submission_transcripts, grading_events
 - [ ] 6.11: Non-unit smoke test by running `uv run python -m app.agents.test_pipeline` and inspecting `backend/temp/agent_test_results.json`
 
@@ -933,3 +933,50 @@ IN_PROGRESS
 - Events are persisted to `grading_events` table for SSE replay/recovery
 - Test validation deferred until next submission creates persisted events
 - Next task (6.8) will upgrade GET /api/submissions/{id} to full SubmissionResultV2 payload
+
+## Iteration Update (Task 6.9 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 6.9: Implemented bidirectional legacy stream status compatibility mapping.
+  - **Created** `backend/app/services/status_compat.py` (140+ lines):
+    - `legacy_status_to_v2(legacy_status: str)` - Converts v1 statuses to v2 StreamStatus enum
+    - `v2_status_to_legacy(v2_status: StreamStatus)` - Converts v2 enum to v1 strings
+    - `normalize_status_input(status)` - Normalizes any input format to v2 StreamStatus
+    - Comprehensive docstrings with usage examples
+  - **Status Mappings**:
+    - `scoping → clarify` (requirements clarification)
+    - `design → design` (direct mapping)
+    - `scale → estimate` (capacity estimation)
+    - `tradeoff → explain` (tradeoff reasoning)
+    - `synthesizing → synthesizing` (direct mapping)
+    - `complete → complete` (direct mapping)
+    - `failed → failed` (direct mapping)
+    - V2-only statuses (`queued`, `processing`) return None for legacy mapping
+  - **Updated** `backend/app/services/__init__.py`:
+    - Exported `legacy_status_to_v2`, `v2_status_to_legacy`, `normalize_status_input`
+  - **Created comprehensive test suite**: `backend/test_status_compat.py` (280+ lines)
+    - Test 1: Legacy → V2 mapping (8 cases) ✅
+    - Test 2: V2 → Legacy mapping (9 cases) ✅
+    - Test 3: Normalize status input (13 cases including error handling) ✅
+    - Test 4: Bidirectional consistency (14 roundtrip tests) ✅
+    - Test 5: All v2 statuses covered (9 statuses) ✅
+  - **Created documentation**: `backend/temp/task_6.9_status_compat_doc.md`
+    - Usage examples for API endpoints, legacy clients, and database migrations
+    - Design rationale for mapping decisions
+    - Integration guidance for SSE endpoints
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/services/status_compat.py` ✅
+- Comprehensive test suite: All 5 test suites passed (44 total test cases) ✅
+- Import validation: Successfully imported all functions ✅
+
+### Notes
+- The compatibility layer supports bidirectional conversion for seamless migration
+- `normalize_status_input()` provides single source of truth for input normalization
+- Clear error messages for invalid statuses help with debugging
+- V2-only statuses (`queued`, `processing`) gracefully return None for legacy mapping
+- All v2 StreamStatus enum values are covered in the mapping
+- Next task (6.10) will add/adjust storage tables for full v2 contract support

@@ -21,6 +21,11 @@ from .grading_events import (
     save_grading_event,
 )
 from .problems import list_problem_summaries
+from .status_compat import (
+    legacy_status_to_v2,
+    normalize_status_input,
+    v2_status_to_legacy,
+)
 from .result_transformer import build_submission_result_v2
 from .submissions import (
     create_submission,
@@ -61,4 +66,7 @@ __all__ = [
     "GradingEvent",
     "save_grading_event",
     "get_grading_events",
+    "legacy_status_to_v2",
+    "v2_status_to_legacy",
+    "normalize_status_input",
 ]
