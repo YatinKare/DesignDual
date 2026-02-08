@@ -255,8 +255,8 @@ Based on the PRD, the backend needs:
 
 ### Phase 10: Frontend Integration Points (Backend Ready for Frontend)
 - [x] 10.1: Document all API endpoints with example requests/responses
-- [ ] 10.2: Test CORS configuration for frontend connection
-- [ ] 10.3: Verify file upload size limits are appropriate
+- [x] 10.2: Test CORS configuration for frontend connection
+- [x] 10.3: Verify file upload size limits are appropriate
 - [ ] 10.4: Create Postman/Thunder Client collection for testing
 - [ ] 10.5: End-to-end test: upload submission → stream progress → fetch result via curl.
 
@@ -1878,3 +1878,41 @@ IN_PROGRESS
 ## Status
 
 IN_PROGRESS
+
+## Completed This Iteration
+- 10.2: Validated CORS behavior with manual runtime checks using `uv run uvicorn` and `curl`.
+
+## Notes
+- Manual validation performed against a live server on `127.0.0.1:8011`.
+- Allowed origin (`http://localhost:5173`) GET request to `/api/problems` returned:
+  - `HTTP/1.1 200 OK`
+  - `access-control-allow-origin: http://localhost:5173`
+  - `access-control-allow-credentials: true`
+- Preflight OPTIONS request to `/api/submissions` with `Access-Control-Request-Method: POST` returned:
+  - `HTTP/1.1 200 OK`
+  - `access-control-allow-origin: http://localhost:5173`
+  - `access-control-allow-methods` including `POST`
+  - `access-control-allow-headers: content-type`
+- Disallowed origin did not receive `access-control-allow-origin`, so browser cross-origin access is blocked as expected.
+- Existing CORS implementation in `backend/app/main.py` is working for frontend development origin configured via `FRONTEND_ORIGIN`.
+
+## Status
+IN_PROGRESS
+
+## Completed This Iteration
+- 10.3: Verified and tightened upload size limits.
+
+## Notes
+- Confirmed upload-size enforcement manually with live requests:
+  - `9 MB` canvas upload accepted (`200`).
+  - `11 MB` canvas upload rejected with `413` and explicit size error.
+- Updated default file-size limit from `50 MB` to `10 MB` per file to reduce memory pressure during multipart handling.
+- Updated size-limit defaults in:
+  - `.env.example`
+  - `backend/.env`
+  - `backend/app/routes/submissions.py`
+  - `backend/app/services/file_storage.py`
+- Task count check after this iteration:
+  - Completed (`[x]`): 71
+  - Remaining (`[ ]`): 13
+  - Status remains `IN_PROGRESS`.

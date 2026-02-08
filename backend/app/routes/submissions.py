@@ -147,7 +147,7 @@ async def create_submission_endpoint(
 
     # Initialize file storage service (get upload root and size limit from environment at runtime)
     upload_root = os.getenv("UPLOAD_ROOT", "./storage/uploads")
-    max_size_mb = int(os.getenv("MAX_UPLOAD_SIZE_MB", "50"))
+    max_size_mb = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
     storage_service = get_file_storage_service(upload_root, max_size_mb)
 
     # Save canvas files (required)

@@ -13,12 +13,12 @@ from fastapi import HTTPException, UploadFile
 class FileStorageService:
     """Service for saving uploaded files to disk with organized directory structure."""
 
-    def __init__(self, upload_root: str, max_size_mb: int = 50) -> None:
+    def __init__(self, upload_root: str, max_size_mb: int = 10) -> None:
         """Initialize file storage service.
 
         Args:
             upload_root: Root directory for all uploaded files (e.g., "./backend/storage/uploads")
-            max_size_mb: Maximum file size in megabytes (default: 50 MB)
+            max_size_mb: Maximum file size in megabytes (default: 10 MB)
         """
         self.upload_root = Path(upload_root)
         self.upload_root.mkdir(parents=True, exist_ok=True)
@@ -227,12 +227,12 @@ class FileStorageService:
             shutil.rmtree(submission_dir)
 
 
-def get_file_storage_service(upload_root: str, max_size_mb: int = 50) -> FileStorageService:
+def get_file_storage_service(upload_root: str, max_size_mb: int = 10) -> FileStorageService:
     """Factory function to create a FileStorageService instance.
 
     Args:
         upload_root: Root directory for uploads (from environment config)
-        max_size_mb: Maximum file size in megabytes (default: 50 MB)
+        max_size_mb: Maximum file size in megabytes (default: 10 MB)
 
     Returns:
         FileStorageService instance
