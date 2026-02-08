@@ -213,7 +213,8 @@ Based on the PRD, the backend needs:
 - [x] 5.6: Test full grading pipeline with real submission via curl.
 
 ### Phase 6: Fixing (Backend Route Updates + Non-Unit Testing)
-- [ ] 6.1: Add shared contract types (Phase, RubricStatus, StreamStatus, SubmissionResultV2)
+- [ ] For subtasks - reference backend-revision-api.md for more extream documentation.
+- [x] 6.1: Add shared contract types (Phase, RubricStatus, StreamStatus, SubmissionResultV2)
 - [ ] 6.2: Update GET /api/problems to return id, name, difficulty (and optional metadata)
 - [ ] 6.3: Update GET /api/problems/{id} to return rubric_definition with phase_weights
 - [ ] 6.4: Harden POST /api/submissions validation (problem_id, PNG/non-empty, phase_times keys)
@@ -565,3 +566,39 @@ IN_PROGRESS
 ### Notes
 - Phase 5 (Grading Pipeline Integration) is fully complete and verified working end-to-end.
 - Next phase (6) will focus on backend route updates and contract compliance.
+
+## Iteration Update (Task 6.1 - Sat Feb 7 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 6.1: Added shared contract types for v2 API (Screen 2 contract).
+  - **Created** `backend/app/models/contract_v2.py` with all v2 contract types:
+    - `RubricStatus` enum: pass/partial/fail
+    - `StreamStatus` enum: queued, processing, clarify, estimate, design, explain, synthesizing, complete, failed
+    - `TranscriptSnippet`: timestamped transcript segments
+    - `EvidenceItem`: phase evidence with snapshot URL + transcripts
+    - `PhaseScore`: per-phase score + 3-6 feedback bullets
+    - `RubricItem`: individual rubric criterion with computed_from phases
+    - `RadarDimension`: radar chart skill dimensions
+    - `StrengthWeakness`: timestamped observations
+    - `NextAttemptItem`: improvement plan items
+    - `ReferenceOutline` + `ReferenceOutlineSection`: structured solution outline
+    - `ProblemMetadata`: minimal problem info for results
+    - `SubmissionResultV2`: complete grading result conforming to Screen 2 contract
+      - Enforces exactly 4 phase_scores
+      - Enforces exactly 4 evidence items
+      - Includes rubric, radar, overall verdict, strengths/weaknesses, next_attempt_plan, follow_up_questions, reference_outline
+      - Includes result_version=2 for compatibility
+  - **Updated** `backend/app/models/__init__.py` to export all v2 contract types
+  - All models use Pydantic v2 with proper field validation and constraints
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/models/contract_v2.py` ✅
+- Import validation: Successfully imported `SubmissionResultV2`, `RubricStatus`, `StreamStatus` ✅
+
+### Notes
+- The v2 contract types are designed to enforce the Screen 2 contract requirements at the Pydantic validation layer
+- Hard constraints (exactly 4 phase scores, exactly 4 evidence items) will catch schema violations early
+- Next task (6.2) will update the GET /api/problems endpoint to return minimal metadata (id, name, difficulty)

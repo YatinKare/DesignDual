@@ -8,6 +8,21 @@ from .common import (
     SubmissionStatus,
     VerdictLabel,
 )
+from .contract_v2 import (
+    EvidenceItem,
+    NextAttemptItem,
+    PhaseScore,
+    ProblemMetadata,
+    RadarDimension,
+    ReferenceOutline,
+    ReferenceOutlineSection,
+    RubricItem,
+    RubricStatus,
+    StreamStatus,
+    StrengthWeakness,
+    SubmissionResultV2,
+    TranscriptSnippet,
+)
 from .grading import DimensionScore, GradingReport
 from .problem import Problem, ProblemSummary
 from .submission import PhaseArtifacts, Submission
@@ -28,4 +43,18 @@ __all__ = [
     "DimensionScore",
     "GradingReport",
     "VerdictLabel",
+    # V2 contract types
+    "RubricStatus",
+    "StreamStatus",
+    "TranscriptSnippet",
+    "EvidenceItem",
+    "PhaseScore",
+    "RubricItem",
+    "RadarDimension",
+    "StrengthWeakness",
+    "NextAttemptItem",
+    "ReferenceOutlineSection",
+    "ReferenceOutline",
+    "ProblemMetadata",
+    "SubmissionResultV2",
 ]
