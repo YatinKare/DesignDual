@@ -12,9 +12,34 @@ from app.models import PhaseArtifacts, PhaseName, Submission
 from app.services.database import db_connection
 from app.services.file_storage import get_file_storage_service
 from app.services.grading import run_grading_pipeline_background
+from app.services.problems import get_problem_by_id
 from app.services.submissions import create_submission
 
 router = APIRouter(tags=["submissions"])
+
+
+def _validate_canvas_file(canvas_file: UploadFile, phase_name: str) -> None:
+    """Validate that a canvas file is non-empty and has correct type.
+
+    Args:
+        canvas_file: Uploaded canvas file
+        phase_name: Name of the phase (for error messages)
+
+    Raises:
+        HTTPException: If file is empty or has invalid type
+    """
+    if canvas_file.size == 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Canvas file for phase '{phase_name}' is empty",
+        )
+
+    # Check content type (expected to be image/png)
+    if canvas_file.content_type not in ["image/png", "image/jpeg"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Canvas file for phase '{phase_name}' must be PNG or JPEG, got '{canvas_file.content_type}'",
+        )
 
 
 @router.post("/api/submissions", response_model=Dict[str, str])
@@ -50,22 +75,63 @@ async def create_submission_endpoint(
     Returns:
         Dictionary with submission_id
     """
-    # TODO: Validate problem_id exists
-
     import json
     import uuid
+
+    # Validate problem_id exists in database
+    problem = await get_problem_by_id(connection, problem_id)
+    if problem is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Problem with id '{problem_id}' not found",
+        )
 
     # Parse phase_times JSON
     try:
         phase_times_dict = json.loads(phase_times)
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid phase_times JSON: {e}",
+        )
+
+    # Validate phase_times has exactly the 4 required keys
+    required_phases = {"clarify", "estimate", "design", "explain"}
+    provided_phases = set(phase_times_dict.keys())
+
+    if provided_phases != required_phases:
+        missing = required_phases - provided_phases
+        extra = provided_phases - required_phases
+        error_parts = []
+        if missing:
+            error_parts.append(f"missing phases: {sorted(missing)}")
+        if extra:
+            error_parts.append(f"unexpected phases: {sorted(extra)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"phase_times must contain exactly [clarify, estimate, design, explain]. {', '.join(error_parts)}",
+        )
+
+    # Convert to typed dict with PhaseName enum
+    try:
         phase_times_typed = {
             PhaseName(phase): seconds for phase, seconds in phase_times_dict.items()
         }
-    except (json.JSONDecodeError, ValueError) as e:
+    except ValueError as e:
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid phase_times format: {e}",
+            detail=f"Invalid phase name in phase_times: {e}",
         )
+
+    # Validate all canvas files are non-empty before processing
+    canvas_validations = [
+        (canvas_clarify, "clarify"),
+        (canvas_estimate, "estimate"),
+        (canvas_design, "design"),
+        (canvas_explain, "explain"),
+    ]
+    for canvas_file, phase_name in canvas_validations:
+        _validate_canvas_file(canvas_file, phase_name)
 
     # Generate submission ID before saving files
     submission_id = str(uuid.uuid4())

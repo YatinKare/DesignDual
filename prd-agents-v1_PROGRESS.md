@@ -217,7 +217,7 @@ Based on the PRD, the backend needs:
 - [x] 6.1: Add shared contract types (Phase, RubricStatus, StreamStatus, SubmissionResultV2)
 - [x] 6.2: Update GET /api/problems to return id, name, difficulty (and optional metadata)
 - [x] 6.3: Update GET /api/problems/{id} to return rubric_definition with phase_weights
-- [ ] 6.4: Harden POST /api/submissions validation (problem_id, PNG/non-empty, phase_times keys)
+- [x] 6.4: Harden POST /api/submissions validation (problem_id, PNG/non-empty, phase_times keys)
 - [ ] 6.5: Persist submission artifacts (canvas/audio) with per-phase mapping and URLs
 - [ ] 6.6: Set submission status lifecycle: queued -> processing
 - [ ] 6.7: Standardize SSE stream statuses to new phase list + include optional progress/phase
@@ -663,4 +663,42 @@ IN_PROGRESS
 - Phase weights allow the RubricRadarAgent (task 7.3) to compute rubric scores as weighted averages of phase scores
 - All rubric items follow the same pattern: 1-2 phases for scoping/estimation, 2-3 phases for design/tradeoffs
 - Migration is idempotent (safe to run multiple times)
-- Next task (6.4) will harden POST /api/submissions validation
+
+## Iteration Update (Task 6.4 - Sat Feb 7 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 6.4: Hardened POST /api/submissions validation.
+  - **Added problem_id validation**: Endpoint now validates that the problem_id exists in the database before accepting the submission. Returns 404 with clear error message if problem not found.
+  - **Added phase_times validation**:
+    - Validates JSON is parseable (returns 400 on JSON decode errors)
+    - Validates exactly 4 required keys are present: clarify, estimate, design, explain
+    - Returns detailed error messages for missing or extra phases
+    - Validates phase names match PhaseName enum
+  - **Added canvas file validation**:
+    - Created `_validate_canvas_file()` helper function
+    - Validates all 4 canvas files are non-empty (size > 0)
+    - Validates content type is image/png or image/jpeg
+    - Returns 400 with specific phase name in error message
+  - **Validation order**: All validation happens upfront before any file processing, ensuring fast failure on invalid input
+  - **Created comprehensive test suite**: `backend/test_submission_validation.sh`
+    - Test 1: Invalid problem_id → 404 ✅
+    - Test 2: Missing phase in phase_times → 400 ✅
+    - Test 3: Extra phase in phase_times → 400 ✅
+    - Test 4: Empty canvas file → 400 ✅
+    - Test 5: Valid submission → 200 ✅
+  - All validation tests passed successfully
+
+### Validation
+- Syntax validation: `uv run python -m py_compile backend/app/routes/submissions.py` ✅
+- End-to-end testing: Ran 5 validation test scenarios via curl, all passed ✅
+- Test results saved to: `backend/temp/validation_test_results.txt`
+
+### Notes
+- Validation is now compliant with backend-revision-api.md requirements
+- Error messages are specific and actionable, helping frontend developers debug issues quickly
+- The validation order (problem_id → phase_times → canvas files) ensures logical error reporting
+- File storage service already handled MIME type validation, but we added upfront size checks for faster feedback
+- Next task (6.5) will persist submission artifacts with per-phase mapping and URLs
