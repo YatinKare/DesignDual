@@ -3,6 +3,15 @@
 		"svelte": {
 			"type": "http",
 			"url": "https://mcp.svelte.dev/mcp"
-		}
+		},
+        "daisyui-docs": {
+          "command": "uv",
+          "args": [
+            "run",
+            "--directory",
+            "/Users/yatink/my-mcps/daisyui-mcp",
+            "mcp_server.py"
+          ]
+        }
 	}
 }

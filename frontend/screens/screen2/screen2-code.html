@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Archmage Council Verdict - DesignDuel</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#F59E0B", // Amber/Gold
+                        "background-light": "#1e1b4b", // Deep Indigo (fallback for light mode in this dark theme context)
+                        "background-dark": "#0f0c29", // Very Dark Indigo/Black
+                        "magical-purple": "#a855f7",
+                        "parchment": "#fdf6e3",
+                        "parchment-dark": "#eaddcf",
+                    },
+                    fontFamily: {
+                        display: ["Cinzel", "serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    backgroundImage: {
+                        'mystic-gradient': 'linear-gradient(to bottom right, #1e1b4b, #312e81, #0f0c29)',
+                        'gold-gradient': 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                    },
+                    boxShadow: {
+                        'glow-gold': '0 0 15px rgba(245, 158, 11, 0.3)',
+                        'glow-purple': '0 0 20px rgba(168, 85, 247, 0.4)',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            background-color: #0f0c29;}.parchment-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .parchment-scroll::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .parchment-scroll::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border-radius: 4px;
+        }.chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-slate-200 font-body min-h-screen flex flex-col overflow-x-hidden selection:bg-magical-purple selection:text-white relative">
+<div class="fixed inset-0 pointer-events-none z-0">
+<div class="absolute top-0 left-0 w-full h-full bg-mystic-gradient opacity-80"></div>
+<div class="absolute -top-40 -right-40 w-96 h-96 bg-purple-900 rounded-full blur-3xl opacity-20"></div>
+<div class="absolute bottom-0 left-20 w-80 h-80 bg-blue-900 rounded-full blur-3xl opacity-20"></div>
+<div class="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full blur-sm opacity-60 animate-pulse"></div>
+<div class="absolute top-3/4 right-1/4 w-1 h-1 bg-primary rounded-full blur-sm opacity-60 animate-pulse delay-75"></div>
+</div>
+<main class="relative z-10 container mx-auto px-6 py-10 max-w-7xl">
+<header class="text-center mb-12 animate-float">
+<h1 class="font-display text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-600 drop-shadow-sm mb-2">
+                The Archmage Council Verdict
+            </h1>
+<p class="text-indigo-200 text-lg tracking-wide uppercase opacity-80 font-display">System Design Evaluation • Candidate #8492</p>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+<div class="lg:col-span-4 flex flex-col justify-center items-center relative">
+<div class="relative group">
+<div class="absolute inset-0 border-4 border-dashed border-magical-purple/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
+<div class="absolute -inset-4 border border-indigo-500/30 rounded-full animate-[spin_15s_linear_infinite_reverse]"></div>
+<div class="w-48 h-48 md:w-64 md:h-64 rounded-full bg-black/40 backdrop-blur-md border-2 border-magical-purple shadow-glow-purple flex flex-col items-center justify-center z-10 relative">
+<span class="font-display text-7xl md:text-8xl font-bold text-white drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">8<span class="text-4xl text-gray-400">/10</span></span>
+<span class="text-magical-purple font-display text-lg mt-2 tracking-widest uppercase glow-text">Mastery</span>
+</div>
+</div>
+<div class="mt-8 text-center space-y-2">
+<div class="inline-flex items-center px-4 py-1 rounded-full bg-green-900/40 border border-green-500/50 text-green-300 text-sm font-medium">
+<span class="material-icons-round text-sm mr-1">check_circle</span> Passed Assessment
+                    </div>
+<p class="text-indigo-300 text-sm max-w-xs mx-auto">
+                        "The candidate weaves logic with exceptional clarity, though their scaling incantations require more potency."
+                    </p>
+</div>
+</div>
+<div class="lg:col-span-8 bg-slate-900/40 backdrop-blur-sm border border-indigo-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+<div class="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-amber-500/50 rounded-tl-lg"></div>
+<div class="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-amber-500/50 rounded-br-lg"></div>
+<h3 class="text-xl font-display text-amber-100 mb-6 flex items-center gap-2">
+<span class="material-icons-round text-amber-400">pentagon</span>
+                    Arcane Attributes
+                </h3>
+<div class="flex flex-col md:flex-row items-center gap-8 h-full">
+<div class="w-full md:w-2/3 chart-container">
+<canvas id="skillsChart"></canvas>
+</div>
+<div class="w-full md:w-1/3 space-y-4">
+<div class="flex justify-between items-center border-b border-indigo-800 pb-2">
+<span class="text-indigo-200">Clarity</span>
+<span class="text-white font-bold">9.2</span>
+</div>
+<div class="flex justify-between items-center border-b border-indigo-800 pb-2">
+<span class="text-indigo-200">Structure</span>
+<span class="text-white font-bold">8.5</span>
+</div>
+<div class="flex justify-between items-center border-b border-indigo-800 pb-2">
+<span class="text-indigo-200">Power (Scale)</span>
+<span class="text-white font-bold">6.8</span>
+</div>
+<div class="flex justify-between items-center border-b border-indigo-800 pb-2">
+<span class="text-indigo-200">Wisdom</span>
+<span class="text-white font-bold">7.5</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 space-y-6">
+<h2 class="text-2xl font-display text-white mb-4 flex items-center">
+<span class="material-icons-round mr-2 text-magical-purple">auto_awesome</span>
+                    Council's Feedback
+                </h2>
+<div class="grid md:grid-cols-2 gap-6">
+<div class="bg-parchment-dark text-slate-800 rounded-lg p-1 shadow-lg transform rotate-[-1deg] hover:rotate-0 transition-transform duration-300">
+<div class="border-2 border-amber-800/20 border-dashed rounded h-full p-5 bg-opacity-50">
+<h3 class="font-display font-bold text-lg text-amber-900 mb-3 flex items-center">
+<span class="material-icons-round mr-2">thumb_up</span>
+                                Strengths
+                            </h3>
+<ul class="space-y-2 text-sm leading-relaxed font-serif">
+<li class="flex items-start">
+<span class="text-amber-700 mr-2">•</span>
+                                    Exceptional database schema design, showcasing deep understanding of relational magic.
+                                </li>
+<li class="flex items-start">
+<span class="text-amber-700 mr-2">•</span>
+                                    Strong communication skills; articulated trade-offs with wisdom.
+                                </li>
+</ul>
+</div>
+</div>
+<div class="bg-parchment-dark text-slate-800 rounded-lg p-1 shadow-lg transform rotate-[1deg] hover:rotate-0 transition-transform duration-300">
+<div class="border-2 border-amber-800/20 border-dashed rounded h-full p-5 bg-opacity-50">
+<h3 class="font-display font-bold text-lg text-amber-900 mb-3 flex items-center">
+<span class="material-icons-round mr-2">thumb_down</span>
+                                Weaknesses
+                            </h3>
+<ul class="space-y-2 text-sm leading-relaxed font-serif">
+<li class="flex items-start">
+<span class="text-amber-700 mr-2">•</span>
+                                    Neglected caching strategies for the read-heavy components.
+                                </li>
+<li class="flex items-start">
+<span class="text-amber-700 mr-2">•</span>
+                                    Initial load balancer configuration was too simplistic for high traffic spells.
+                                </li>
+</ul>
+</div>
+</div>
+</div>
+<div class="bg-gradient-to-r from-slate-800 to-slate-900 border border-indigo-500/40 rounded-xl p-6 shadow-glow-gold relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-icons-round text-9xl">upgrade</span>
+</div>
+<h3 class="text-amber-400 font-display text-xl mb-4">Grimoire of Improvement</h3>
+<div class="space-y-4 relative z-10">
+<div class="flex items-start gap-4">
+<div class="bg-indigo-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-white font-bold">1</div>
+<div>
+<h4 class="text-white font-semibold">Master Distributed Caching</h4>
+<p class="text-indigo-300 text-sm">Implement Redis or Memcached patterns to reduce database load during peak mana usage.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="bg-indigo-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-white font-bold">2</div>
+<div>
+<h4 class="text-white font-semibold">Study Async Processing</h4>
+<p class="text-indigo-300 text-sm">Decouple heavy computation spells using message queues like Kafka.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="bg-indigo-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 text-white font-bold">3</div>
+<div>
+<h4 class="text-white font-semibold">Refine Sharding Techniques</h4>
+<p class="text-indigo-300 text-sm">Learn horizontal partitioning to manage massive data volumes effectively.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-1">
+<div class="bg-black/30 backdrop-blur border border-white/10 rounded-xl p-6 h-full">
+<h2 class="text-xl font-display text-white mb-6 border-b border-white/10 pb-4">
+                        Evaluation Rubric
+                    </h2>
+<div class="space-y-4">
+<div class="flex items-center justify-between group">
+<span class="text-gray-300 group-hover:text-white transition-colors">Requirements Gathering</span>
+<span class="text-green-400 material-icons-round">check_circle</span>
+</div>
+<div class="flex items-center justify-between group">
+<span class="text-gray-300 group-hover:text-white transition-colors">Back-of-Envelope Calc</span>
+<span class="text-green-400 material-icons-round">check_circle</span>
+</div>
+<div class="flex items-center justify-between group">
+<span class="text-gray-300 group-hover:text-white transition-colors">API Design</span>
+<span class="text-green-400 material-icons-round">check_circle</span>
+</div>
+<div class="flex items-center justify-between group">
+<span class="text-gray-300 group-hover:text-white transition-colors">Database Schema</span>
+<span class="text-green-400 material-icons-round">check_circle</span>
+</div>
+<div class="flex items-center justify-between group">
+<span class="text-gray-300 group-hover:text-white transition-colors">Scalability Plan</span>
+<span class="text-amber-500 material-icons-round" title="Partial Credit">remove_circle_outline</span>
+</div>
+<div class="flex items-center justify-between group">
+<span class="text-gray-300 group-hover:text-white transition-colors">Reliability &amp; Redundancy</span>
+<span class="text-green-400 material-icons-round">check_circle</span>
+</div>
+<div class="flex items-center justify-between group">
+<span class="text-gray-300 group-hover:text-white transition-colors">Monitoring &amp; Alerts</span>
+<span class="text-red-500 material-icons-round">cancel</span>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-white/10">
+<button class="w-full bg-primary hover:bg-amber-600 text-black font-bold py-3 px-4 rounded shadow-glow-gold transition-all transform active:scale-95 font-display uppercase tracking-wider flex justify-center items-center gap-2">
+<span class="material-icons-round">history_edu</span>
+                            View Detailed Transcript
+                        </button>
+<button class="w-full mt-3 bg-transparent hover:bg-white/5 border border-indigo-400/50 text-indigo-200 font-bold py-3 px-4 rounded transition-all font-display uppercase tracking-wider text-sm">
+                            Retake Challenge
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            // Create gradient for the radar chart area
+            const gradient = ctx.createRadialGradient(150, 150, 0, 150, 150, 150);
+            gradient.addColorStop(0, 'rgba(168, 85, 247, 0.5)'); // Purple center
+            gradient.addColorStop(1, 'rgba(168, 85, 247, 0.1)'); // Fades out
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Clarity', 'Structure', 'Power', 'Wisdom', 'Speed', 'Security'],
+                    datasets: [{
+                        label: 'Candidate Stats',
+                        data: [9.2, 8.5, 6.8, 7.5, 8.0, 7.2],
+                        backgroundColor: gradient,
+                        borderColor: '#fbbf24', // Gold border
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#fbbf24',
+                        pointHoverBackgroundColor: '#fbbf24',
+                        pointHoverBorderColor: '#fff',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: '#e0e7ff', // Light indigo text
+                                font: {
+                                    family: 'Cinzel',
+                                    size: 12
+                                }
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                color: 'transparent', // Hide numbers on axis
+                                min: 0,
+                                max: 10
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+</body></html>
