@@ -213,7 +213,6 @@ Based on the PRD, the backend needs:
 - [x] 5.6: Test full grading pipeline with real submission via curl.
 
 ### Phase 6: Fixing (Backend Route Updates + Non-Unit Testing)
-- [ ] For subtasks - reference backend-revision-api.md for more extream documentation.
 - [x] 6.1: Add shared contract types (Phase, RubricStatus, StreamStatus, SubmissionResultV2)
 - [x] 6.2: Update GET /api/problems to return id, name, difficulty (and optional metadata)
 - [x] 6.3: Update GET /api/problems/{id} to return rubric_definition with phase_weights
@@ -227,8 +226,10 @@ Based on the PRD, the backend needs:
 - [x] 6.11: Non-unit smoke test by running `uv run python -m app.agents.test_pipeline` and inspecting `backend/temp/agent_test_results.json`
 
 ### Phase 7: Agentic System v2 (Screen 2 Contract Compliant)
+- [ ] For subtasks - reference backend-revision-api.md for more extream documentation.
+- REMINDER: USE `adk-docs` mcp for best google-adk best practices and examples for each subtask.
 - [x] 7.1: Shift to phase-first grading with 4 phase agents (clarify/estimate/design/explain)
-- [ ] 7.2: Add ParallelAgent for phase agents + SequentialAgent orchestration (GradingPipelineV2)
+- [x] 7.2: Add ParallelAgent for phase agents + SequentialAgent orchestration (GradingPipelineV2)
 - [ ] 7.3: Implement RubricRadarAgent (rubric + radar + overall_score + verdict + summary)
 - [ ] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
 - [ ] 7.5: Implement FinalAssemblerV2 (build SubmissionResultV2, enforce 4 phase cards + 4 evidence)
@@ -1086,3 +1087,69 @@ IN_PROGRESS
 - All tables are linked with proper foreign keys and CASCADE delete for data integrity
 - Migration is idempotent and safe to run multiple times
 - Next task (6.11) will run smoke tests to verify the full pipeline works end-to-end
+
+## Iteration Update (Task 7.2 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 7.2: Implemented ParallelAgent for phase agents + SequentialAgent orchestration (GradingPipelineV2).
+  - **Created** `backend/app/agents/orchestrator_v2.py`:
+    - Factory function `create_grading_pipeline_v2()` that returns a fully configured v2 pipeline
+    - Uses `SequentialAgent` as the top-level orchestrator (name: "GradingPipelineV2")
+    - Contains `ParallelAgent` (name: "PhaseEvaluationPanel") with 4 phase agents:
+      1. `clarify_phase_agent` (output_key: "phase:clarify")
+      2. `estimate_phase_agent` (output_key: "phase:estimate")
+      3. `design_phase_agent` (output_key: "phase:design")
+      4. `explain_phase_agent` (output_key: "phase:explain")
+    - All 4 phase agents run concurrently via ParallelAgent
+    - Each agent writes its output to a namespaced output_key in session.state
+    - TODO placeholders added for future synthesis agents (tasks 7.3-7.5)
+  - **Architecture**:
+    ```
+    SequentialAgent: GradingPipelineV2
+    └── ParallelAgent: PhaseEvaluationPanel
+        ├── ClarifyPhaseAgent  (output_key: "phase:clarify")
+        ├── EstimatePhaseAgent (output_key: "phase:estimate")
+        ├── DesignPhaseAgent   (output_key: "phase:design")
+        └── ExplainPhaseAgent  (output_key: "phase:explain")
+    ```
+  - **Updated** `backend/app/agents/__init__.py`:
+    - Exported `create_grading_pipeline_v2` function
+    - Added v2 orchestrator to __all__ list
+    - Organized imports by v1 vs v2 components
+  - **Session State Structure (v2)**:
+    - **Input** (set by grading service):
+      - `problem`: Problem metadata with rubric_definition
+      - `phase_artifacts`: Dict mapping phase → {canvas_url, transcripts, snapshot_url}
+      - `phase_times`: Dict mapping phase → seconds
+    - **Output** (written by phase agents):
+      - `phase:clarify`: PhaseAgentOutput for clarify phase
+      - `phase:estimate`: PhaseAgentOutput for estimate phase
+      - `phase:design`: PhaseAgentOutput for design phase
+      - `phase:explain`: PhaseAgentOutput for explain phase
+    - **Future outputs** (tasks 7.3-7.5):
+      - `rubric_radar`: RubricRadarAgent output
+      - `plan_outline`: PlanOutlineAgent output
+      - `final_report_v2`: FinalAssemblerV2 output
+  - **Created validation test**: `backend/test_pipeline_v2_structure.py`
+    - Verifies pipeline can be instantiated
+    - Verifies correct number of sub-agents (1 ParallelAgent)
+    - Verifies phase panel has exactly 4 agents
+    - Verifies all output_keys match expected pattern ("phase:*")
+    - All checks passed ✅
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/agents/orchestrator_v2.py` ✅
+- Import validation: Successfully imported `create_grading_pipeline_v2` ✅
+- Pipeline instantiation: Successfully created pipeline with correct structure ✅
+- Structure test: All 4 phase agents present with correct output_keys ✅
+
+### Notes
+- The v2 orchestrator follows the same pattern as v1 (orchestrator.py) but uses phase agents instead of dimension agents
+- Output keys use "phase:" prefix to namespace v2 outputs separately from v1 outputs
+- The pipeline is designed to be extended with additional synthesis agents in tasks 7.3-7.5
+- All 4 phase agents run in parallel for maximum speed (same as v1 design)
+- The ParallelAgent + SequentialAgent pattern is best practice for ADK orchestration
+- Next task (7.3) will implement RubricRadarAgent to compute rubric items and radar dimensions
