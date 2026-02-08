@@ -258,7 +258,7 @@ Based on the PRD, the backend needs:
 - [x] 10.2: Test CORS configuration for frontend connection
 - [x] 10.3: Verify file upload size limits are appropriate
 - [x] 10.4: Create Postman/Thunder Client collection for testing
-- [ ] 10.5: End-to-end test: upload submission → stream progress → fetch result via curl.
+- [x] 10.5: End-to-end test: upload submission → stream progress → fetch result via curl.
 
 ### Phase 11: Error Handling & Robustness
 - [ ] 11.1: Add comprehensive error handling to all routes
@@ -1949,4 +1949,32 @@ IN_PROGRESS
 - Total tasks in main Task List: 85
 - Marked complete `[x]`: 73
 - Remaining `[ ]`: 12
+- Status remains `IN_PROGRESS` because unchecked tasks remain.
+
+## Iteration Update (Task 10.5 - Sun Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 10.5: Completed end-to-end curl validation for submission lifecycle.
+  - Uploaded a submission with four phase canvases via `POST /api/submissions`.
+  - Captured `submission_id` and streamed progress via `GET /api/submissions/{id}/stream`.
+  - Verified full status progression to terminal `complete`.
+  - Retrieved final result via `GET /api/submissions/{id}`.
+
+### Validation
+- Verified task was not already marked complete in task list before execution.
+- Manual runtime test (non-unit) against live server on `127.0.0.1:8012`:
+  - `POST /api/submissions` → `200` with `submission_id=d284d5da-45f9-4b8f-b5a8-41e5137eaf00` ✅
+  - `GET /api/submissions/{id}/stream` emitted:
+    - `processing` → `clarify` → `estimate` → `design` → `explain` → `synthesizing` → `complete` ✅
+    - Final `complete` event included full `result` payload ✅
+  - `GET /api/submissions/{id}` → `200` with `result_version=2`, `overall_score=8.2`, `verdict=hire` ✅
+- No code changes were required; existing implementation already satisfied the end-to-end contract.
+
+### Task Count Check
+- Total tasks in main Task List: 85
+- Marked complete `[x]`: 74
+- Remaining `[ ]`: 11
 - Status remains `IN_PROGRESS` because unchecked tasks remain.
