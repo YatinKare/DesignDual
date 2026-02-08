@@ -235,7 +235,7 @@ Based on the PRD, the backend needs:
 - [x] 7.5: Implement FinalAssemblerV2 (build SubmissionResultV2, enforce 4 phase cards + 4 evidence)
 - [ ] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
 - [x] 7.7: Update session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2)
-- [ ] 7.8: Update agent prompts to strict JSON with timestamps + evidence per phase
+- [x] 7.8: Update agent prompts to strict JSON with timestamps + evidence per phase (already complete - all agents use JSON_RESPONSE_CONFIG)
 
 ### Phase 8: Server-Sent Events (Real-time Progress Streaming)
 - [ ] 8.1: Install and configure sse-starlette for FastAPI
@@ -1574,5 +1574,5 @@ IN_PROGRESS
 - Phase artifacts use URL references instead of base64 data for efficiency
 - Transcript snippets are fetched from database (timestamped segments)
 - The implementation is ready for integration with the v2 grading pipeline
-- Next task (7.8) will update agent prompts if needed (though current prompts already use strict JSON)
+- Task 7.8 verified complete: All agents (phase + synthesis) already use strict JSON output via `JSON_RESPONSE_CONFIG`, and all phase agents include timestamps in evidence/strengths/weaknesses/highlights fields
 - The v2 pipeline can now be tested end-to-end once integrated into the grading service
