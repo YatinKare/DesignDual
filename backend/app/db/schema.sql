@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS problems (
     estimated_time_minutes INTEGER NOT NULL DEFAULT 30 CHECK (estimated_time_minutes > 0),
     phase_time_minutes TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(phase_time_minutes)),
     rubric_hints TEXT NOT NULL DEFAULT '{}' CHECK (json_valid(rubric_hints)),
+    rubric_definition TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(rubric_definition)),
     sample_solution_outline TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

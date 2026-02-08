@@ -9,6 +9,16 @@ from pydantic import Field
 from .common import APISchema, DifficultyLevel, PhaseName
 
 
+class RubricDefinition(APISchema):
+    """Individual rubric criterion with phase weights."""
+
+    label: str = Field(description="Rubric criterion label")
+    description: str = Field(description="What this criterion evaluates")
+    phase_weights: Dict[PhaseName, float] = Field(
+        description="Phase weights for computing this rubric score (should sum to 1.0)"
+    )
+
+
 class ProblemSummary(APISchema):
     """Lightweight view used for problem list responses."""
 
@@ -33,10 +43,14 @@ class Problem(ProblemSummary):
         default_factory=dict,
         description="Key things graders look for in each phase or dimension.",
     )
+    rubric_definition: List[RubricDefinition] = Field(
+        default_factory=list,
+        description="Structured rubric criteria with phase weights for v2 contract.",
+    )
     sample_solution_outline: Optional[str] = Field(
         default=None,
         description="High-level outline used to inspire feedback or references.",
     )
 
 
-__all__ = ["Problem", "ProblemSummary"]
+__all__ = ["Problem", "ProblemSummary", "RubricDefinition"]

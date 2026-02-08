@@ -24,7 +24,7 @@ from .contract_v2 import (
     TranscriptSnippet,
 )
 from .grading import DimensionScore, GradingReport
-from .problem import Problem, ProblemSummary
+from .problem import Problem, ProblemSummary, RubricDefinition
 from .submission import PhaseArtifacts, Submission
 
 # Rebuild Submission model after GradingReport is imported to resolve forward references
@@ -37,6 +37,7 @@ __all__ = [
     "PhaseName",
     "Problem",
     "ProblemSummary",
+    "RubricDefinition",
     "PhaseArtifacts",
     "Submission",
     "SubmissionStatus",

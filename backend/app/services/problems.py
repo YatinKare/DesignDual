@@ -55,7 +55,8 @@ async def get_problem_by_id(
     cursor = await connection.execute(
         """
         SELECT id, slug, title, difficulty, focus_tags, estimated_time_minutes,
-               prompt, constraints, phase_time_minutes, rubric_hints, sample_solution_outline
+               prompt, constraints, phase_time_minutes, rubric_hints, rubric_definition,
+               sample_solution_outline
         FROM problems
         WHERE id = ?
         """,
@@ -72,6 +73,7 @@ async def get_problem_by_id(
     constraints = json.loads(row["constraints"] or "[]")
     phase_time_minutes = json.loads(row["phase_time_minutes"] or "{}")
     rubric_hints = json.loads(row["rubric_hints"] or "{}")
+    rubric_definition = json.loads(row["rubric_definition"] or "[]")
 
     return Problem(
         id=row["id"],
@@ -84,6 +86,7 @@ async def get_problem_by_id(
         constraints=constraints,
         phase_time_minutes=phase_time_minutes,
         rubric_hints=rubric_hints,
+        rubric_definition=rubric_definition,
         sample_solution_outline=row["sample_solution_outline"],
     )
 

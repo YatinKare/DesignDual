@@ -216,7 +216,7 @@ Based on the PRD, the backend needs:
 - [ ] For subtasks - reference backend-revision-api.md for more extream documentation.
 - [x] 6.1: Add shared contract types (Phase, RubricStatus, StreamStatus, SubmissionResultV2)
 - [x] 6.2: Update GET /api/problems to return id, name, difficulty (and optional metadata)
-- [ ] 6.3: Update GET /api/problems/{id} to return rubric_definition with phase_weights
+- [x] 6.3: Update GET /api/problems/{id} to return rubric_definition with phase_weights
 - [ ] 6.4: Harden POST /api/submissions validation (problem_id, PNG/non-empty, phase_times keys)
 - [ ] 6.5: Persist submission artifacts (canvas/audio) with per-phase mapping and URLs
 - [ ] 6.6: Set submission status lifecycle: queued -> processing
@@ -628,3 +628,39 @@ IN_PROGRESS
 - When building `SubmissionResultV2`, the `ProblemMetadata` type uses `name`, so we'll map `title` → `name` at that layer
 - No breaking changes needed since this is greenfield development (frontend not yet fully integrated)
 - Next task (6.3) will add `rubric_definition` to the Problem detail endpoint, which requires database schema changes
+
+## Iteration Update (Task 6.3 - Sat Feb 7 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 6.3: Updated GET /api/problems/{id} to return rubric_definition with phase_weights.
+  - **Added database column**: `rubric_definition TEXT NOT NULL DEFAULT '[]'` to `problems` table with JSON validation
+  - **Created RubricDefinition model**: New Pydantic model with `label`, `description`, and `phase_weights` fields
+  - **Updated Problem model**: Added `rubric_definition: List[RubricDefinition]` field
+  - **Updated service layer**: Modified `get_problem_by_id()` to fetch and parse `rubric_definition` from database
+  - **Created migration script**: `backend/app/db/migrate_add_rubric_definition.py` to add column and populate data
+  - **Populated rubric definitions**: All 6 problems now have 5 rubric items each with proper phase_weights
+    - url-shortener: Requirements Clarity, Capacity Estimation, System Design, Scalability Plan, Tradeoff Analysis
+    - rate-limiter: Requirements Clarity, Capacity Estimation, System Design, Distributed Coordination, Algorithm Selection
+    - spotify: Requirements Clarity, Capacity Estimation, System Design, Data Architecture, Streaming & CDN
+    - chat-system: Requirements Clarity, Capacity Estimation, System Design, Real-time Delivery, Consistency Model
+    - youtube: Requirements Clarity, Capacity Estimation, System Design, Video Pipeline, Analytics & Scale
+    - google-docs: Requirements Clarity, Capacity Estimation, System Design, Conflict Resolution, Consistency & Offline
+  - **Phase weights structure**: Each rubric item specifies which phases contribute to its score (e.g., `{"clarify": 0.7, "estimate": 0.3}`)
+
+### Validation
+- Ran migration successfully: `uv run python backend/app/db/migrate_add_rubric_definition.py` ✅
+- Syntax validation: `uv run --project backend python -m py_compile backend/app/models/problem.py backend/app/services/problems.py` ✅
+- Started FastAPI server and tested endpoint: `curl http://127.0.0.1:8000/api/problems/url-shortener` ✅
+- Verified rubric_definition returned with 5 items for url-shortener ✅
+- Verified rubric_definition returned with 5 items for spotify ✅
+- All phase_weights sum to 1.0 for each rubric item ✅
+
+### Notes
+- The rubric_definition structure is fully compatible with the v2 contract's `RubricItem` type
+- Phase weights allow the RubricRadarAgent (task 7.3) to compute rubric scores as weighted averages of phase scores
+- All rubric items follow the same pattern: 1-2 phases for scoping/estimation, 2-3 phases for design/tradeoffs
+- Migration is idempotent (safe to run multiple times)
+- Next task (6.4) will harden POST /api/submissions validation
