@@ -1,0 +1,605 @@
+INFO:     Started server process [62996]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50412 - "GET /api/problems HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50414 - "GET /api/problems HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50416 - "POST /api/submissions HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:50426 - "GET /api/problems HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50428 - "GET /api/problems HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50430 - "POST /api/submissions HTTP/1.1" 200 OK
+Agent pipeline execution failed for submission 301d5b94-db02-4f3e-9b55-eb2cebd2220b after 0 events
+  + Exception Group Traceback (most recent call last):
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 458, in run_grading_pipeline_background
+  |     await asyncio.wait_for(
+  |     ...<2 lines>...
+  |     )
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/tasks.py", line 507, in wait_for
+  |     return await fut
+  |            ^^^^^^^^^
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 443, in run_agent_pipeline
+  |     async for event in runner.run_async(
+  |     ...<12 lines>...
+  |             )
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 562, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 550, in _run_with_trace
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 779, in _exec_with_plugin
+  |     async for event in agen:
+  |     ...<64 lines>...
+  |         yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 539, in execute
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/sequential_agent.py", line 77, in _run_async_impl
+  |     async for event in agen:
+  |     ...<2 lines>...
+  |         pause_invocation = True
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 192, in _run_async_impl
+  |     async for event in agen:
+  |     ...<2 lines>...
+  |         pause_invocation = True
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 71, in _merge_agent_run
+  |     async with asyncio.TaskGroup() as tg:
+  |                ~~~~~~~~~~~~~~~~~^^
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/taskgroups.py", line 71, in __aexit__
+  |     return await self._aexit(et, exc)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/taskgroups.py", line 173, in _aexit
+  |     raise BaseExceptionGroup(
+  |     ...<2 lines>...
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 62, in process_an_agent
+    |     async for event in events_for_one_agent:
+    |     ...<3 lines>...
+    |       await resume_signal.wait()
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+    |     async for event in agen:
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 468, in _run_async_impl
+    |     async for event in agen:
+    |     ...<5 lines>...
+    |         should_pause = True
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 427, in run_async
+    |     async for event in agen:
+    |       last_event = event
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 504, in _run_one_step_async
+    |     async for llm_response in agen:
+    |     ...<13 lines>...
+    |           yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 967, in _call_llm_async
+    |     async for event in agen:
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 950, in _call_llm_with_tracing
+    |     async for llm_response in agen:
+    |     ...<13 lines>...
+    |       yield llm_response
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 1190, in _run_and_handle_error
+    |     raise model_error
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 1175, in _run_and_handle_error
+    |     async for llm_response in agen:
+    |       tracing.trace_generate_content_result(span, llm_response)
+    |       yield llm_response
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/models/google_llm.py", line 263, in generate_content_async
+    |     raise ce
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/models/google_llm.py", line 242, in generate_content_async
+    |     response = await self.api_client.aio.models.generate_content(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/models.py", line 7331, in generate_content
+    |     response = await self._generate_content(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         model=model, contents=contents, config=parsed_config
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/models.py", line 6095, in _generate_content
+    |     response = await self._api_client.async_request(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         'post', path, request_dict, http_options
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1432, in async_request
+    |     result = await self._async_request(
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         http_request=http_request, http_options=http_options, stream=False
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1365, in _async_request
+    |     return await self._async_retry(  # type: ignore[no-any-return]
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self._async_request_once, http_request, stream
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 112, in __call__
+    |     do = await self.iter(retry_state=retry_state)
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 157, in iter
+    |     result = await action(retry_state)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/_utils.py", line 111, in inner
+    |     return call(*args, **kwargs)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 413, in exc_check
+    |     raise retry_exc.reraise()
+    |           ~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 184, in reraise
+    |     raise self.last_attempt.result()
+    |           ~~~~~~~~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    |     return self.__get_result()
+    |            ~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    |     raise self._exception
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 116, in __call__
+    |     result = await fn(*args, **kwargs)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1345, in _async_request_once
+    |     await errors.APIError.raise_for_async_response(client_response)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/errors.py", line 216, in raise_for_async_response
+    |     await cls.raise_error_async(status_code, response_json, response)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/errors.py", line 238, in raise_error_async
+    |     raise ClientError(status_code, response_json, response)
+    | google.genai.errors.ClientError: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'API key not valid. Please pass a valid API key.', 'status': 'INVALID_ARGUMENT', 'details': [{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'API_KEY_INVALID', 'domain': 'googleapis.com', 'metadata': {'service': 'generativelanguage.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'API key not valid. Please pass a valid API key.'}]}}
+    +------------------------------------
+Grading pipeline failed for submission 301d5b94-db02-4f3e-9b55-eb2cebd2220b
+  + Exception Group Traceback (most recent call last):
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 458, in run_grading_pipeline_background
+  |     await asyncio.wait_for(
+  |     ...<2 lines>...
+  |     )
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/tasks.py", line 507, in wait_for
+  |     return await fut
+  |            ^^^^^^^^^
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 443, in run_agent_pipeline
+  |     async for event in runner.run_async(
+  |     ...<12 lines>...
+  |             )
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 562, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 550, in _run_with_trace
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 779, in _exec_with_plugin
+  |     async for event in agen:
+  |     ...<64 lines>...
+  |         yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 539, in execute
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/sequential_agent.py", line 77, in _run_async_impl
+  |     async for event in agen:
+  |     ...<2 lines>...
+  |         pause_invocation = True
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 192, in _run_async_impl
+  |     async for event in agen:
+  |     ...<2 lines>...
+  |         pause_invocation = True
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 71, in _merge_agent_run
+  |     async with asyncio.TaskGroup() as tg:
+  |                ~~~~~~~~~~~~~~~~~^^
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/taskgroups.py", line 71, in __aexit__
+  |     return await self._aexit(et, exc)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/taskgroups.py", line 173, in _aexit
+  |     raise BaseExceptionGroup(
+  |     ...<2 lines>...
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 62, in process_an_agent
+    |     async for event in events_for_one_agent:
+    |     ...<3 lines>...
+    |       await resume_signal.wait()
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+    |     async for event in agen:
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 468, in _run_async_impl
+    |     async for event in agen:
+    |     ...<5 lines>...
+    |         should_pause = True
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 427, in run_async
+    |     async for event in agen:
+    |       last_event = event
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 504, in _run_one_step_async
+    |     async for llm_response in agen:
+    |     ...<13 lines>...
+    |           yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 967, in _call_llm_async
+    |     async for event in agen:
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 950, in _call_llm_with_tracing
+    |     async for llm_response in agen:
+    |     ...<13 lines>...
+    |       yield llm_response
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 1190, in _run_and_handle_error
+    |     raise model_error
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 1175, in _run_and_handle_error
+    |     async for llm_response in agen:
+    |       tracing.trace_generate_content_result(span, llm_response)
+    |       yield llm_response
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/models/google_llm.py", line 263, in generate_content_async
+    |     raise ce
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/models/google_llm.py", line 242, in generate_content_async
+    |     response = await self.api_client.aio.models.generate_content(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/models.py", line 7331, in generate_content
+    |     response = await self._generate_content(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         model=model, contents=contents, config=parsed_config
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/models.py", line 6095, in _generate_content
+    |     response = await self._api_client.async_request(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         'post', path, request_dict, http_options
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1432, in async_request
+    |     result = await self._async_request(
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         http_request=http_request, http_options=http_options, stream=False
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1365, in _async_request
+    |     return await self._async_retry(  # type: ignore[no-any-return]
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self._async_request_once, http_request, stream
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 112, in __call__
+    |     do = await self.iter(retry_state=retry_state)
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 157, in iter
+    |     result = await action(retry_state)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/_utils.py", line 111, in inner
+    |     return call(*args, **kwargs)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 413, in exc_check
+    |     raise retry_exc.reraise()
+    |           ~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 184, in reraise
+    |     raise self.last_attempt.result()
+    |           ~~~~~~~~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    |     return self.__get_result()
+    |            ~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    |     raise self._exception
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 116, in __call__
+    |     result = await fn(*args, **kwargs)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1345, in _async_request_once
+    |     await errors.APIError.raise_for_async_response(client_response)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/errors.py", line 216, in raise_for_async_response
+    |     await cls.raise_error_async(status_code, response_json, response)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/errors.py", line 238, in raise_error_async
+    |     raise ClientError(status_code, response_json, response)
+    | google.genai.errors.ClientError: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'API key not valid. Please pass a valid API key.', 'status': 'INVALID_ARGUMENT', 'details': [{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'API_KEY_INVALID', 'domain': 'googleapis.com', 'metadata': {'service': 'generativelanguage.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'API key not valid. Please pass a valid API key.'}]}}
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 478, in run_grading_pipeline_background
+    raise ValueError(f"Agent execution failed: {e}") from e
+ValueError: Agent execution failed: unhandled errors in a TaskGroup (1 sub-exception)
+Background grading failed for submission 301d5b94-db02-4f3e-9b55-eb2cebd2220b: Grading pipeline failed: Agent execution failed: unhandled errors in a TaskGroup (1 sub-exception)
+  + Exception Group Traceback (most recent call last):
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 458, in run_grading_pipeline_background
+  |     await asyncio.wait_for(
+  |     ...<2 lines>...
+  |     )
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/tasks.py", line 507, in wait_for
+  |     return await fut
+  |            ^^^^^^^^^
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 443, in run_agent_pipeline
+  |     async for event in runner.run_async(
+  |     ...<12 lines>...
+  |             )
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 562, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 550, in _run_with_trace
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 779, in _exec_with_plugin
+  |     async for event in agen:
+  |     ...<64 lines>...
+  |         yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/runners.py", line 539, in execute
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/sequential_agent.py", line 77, in _run_async_impl
+  |     async for event in agen:
+  |     ...<2 lines>...
+  |         pause_invocation = True
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+  |     async for event in agen:
+  |       yield event
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 192, in _run_async_impl
+  |     async for event in agen:
+  |     ...<2 lines>...
+  |         pause_invocation = True
+  |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 71, in _merge_agent_run
+  |     async with asyncio.TaskGroup() as tg:
+  |                ~~~~~~~~~~~~~~~~~^^
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/taskgroups.py", line 71, in __aexit__
+  |     return await self._aexit(et, exc)
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/asyncio/taskgroups.py", line 173, in _aexit
+  |     raise BaseExceptionGroup(
+  |     ...<2 lines>...
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/parallel_agent.py", line 62, in process_an_agent
+    |     async for event in events_for_one_agent:
+    |     ...<3 lines>...
+    |       await resume_signal.wait()
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/base_agent.py", line 294, in run_async
+    |     async for event in agen:
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/agents/llm_agent.py", line 468, in _run_async_impl
+    |     async for event in agen:
+    |     ...<5 lines>...
+    |         should_pause = True
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 427, in run_async
+    |     async for event in agen:
+    |       last_event = event
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 504, in _run_one_step_async
+    |     async for llm_response in agen:
+    |     ...<13 lines>...
+    |           yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 967, in _call_llm_async
+    |     async for event in agen:
+    |       yield event
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 950, in _call_llm_with_tracing
+    |     async for llm_response in agen:
+    |     ...<13 lines>...
+    |       yield llm_response
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 1190, in _run_and_handle_error
+    |     raise model_error
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/flows/llm_flows/base_llm_flow.py", line 1175, in _run_and_handle_error
+    |     async for llm_response in agen:
+    |       tracing.trace_generate_content_result(span, llm_response)
+    |       yield llm_response
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/models/google_llm.py", line 263, in generate_content_async
+    |     raise ce
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/adk/models/google_llm.py", line 242, in generate_content_async
+    |     response = await self.api_client.aio.models.generate_content(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     ...<3 lines>...
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/models.py", line 7331, in generate_content
+    |     response = await self._generate_content(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         model=model, contents=contents, config=parsed_config
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/models.py", line 6095, in _generate_content
+    |     response = await self._api_client.async_request(
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         'post', path, request_dict, http_options
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1432, in async_request
+    |     result = await self._async_request(
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         http_request=http_request, http_options=http_options, stream=False
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1365, in _async_request
+    |     return await self._async_retry(  # type: ignore[no-any-return]
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |         self._async_request_once, http_request, stream
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |     )
+    |     ^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 112, in __call__
+    |     do = await self.iter(retry_state=retry_state)
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 157, in iter
+    |     result = await action(retry_state)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/_utils.py", line 111, in inner
+    |     return call(*args, **kwargs)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 413, in exc_check
+    |     raise retry_exc.reraise()
+    |           ~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 184, in reraise
+    |     raise self.last_attempt.result()
+    |           ~~~~~~~~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    |     return self.__get_result()
+    |            ~~~~~~~~~~~~~~~~~^^
+    |   File "/Users/yatink/.local/share/uv/python/cpython-3.13.5-macos-aarch64-none/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    |     raise self._exception
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/tenacity/asyncio/__init__.py", line 116, in __call__
+    |     result = await fn(*args, **kwargs)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/_api_client.py", line 1345, in _async_request_once
+    |     await errors.APIError.raise_for_async_response(client_response)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/errors.py", line 216, in raise_for_async_response
+    |     await cls.raise_error_async(status_code, response_json, response)
+    |   File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/.venv/lib/python3.13/site-packages/google/genai/errors.py", line 238, in raise_error_async
+    |     raise ClientError(status_code, response_json, response)
+    | google.genai.errors.ClientError: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': 'API key not valid. Please pass a valid API key.', 'status': 'INVALID_ARGUMENT', 'details': [{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'API_KEY_INVALID', 'domain': 'googleapis.com', 'metadata': {'service': 'generativelanguage.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'API key not valid. Please pass a valid API key.'}]}}
+    +------------------------------------
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 478, in run_grading_pipeline_background
+    raise ValueError(f"Agent execution failed: {e}") from e
+ValueError: Agent execution failed: unhandled errors in a TaskGroup (1 sub-exception)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/yatink/Documents/GitHub/DesignDual-backend/backend/app/services/grading.py", line 488, in run_grading_pipeline_background
+    raise ValueError(f"Grading pipeline failed: {e}") from e
+ValueError: Grading pipeline failed: Agent execution failed: unhandled errors in a TaskGroup (1 sub-exception)
+INFO:     127.0.0.1:50437 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50439 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50442 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50444 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50446 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50449 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50451 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50453 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50455 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50458 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50461 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50470 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50473 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50476 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50478 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50480 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50482 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50484 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50490 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50492 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50495 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50498 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50500 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50509 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50512 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50514 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50516 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50518 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50520 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50522 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50525 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50527 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50529 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50533 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50535 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50545 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50547 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50549 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50551 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50553 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50555 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50561 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50563 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50565 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50568 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50571 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50585 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50593 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50595 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50597 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50601 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50603 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50605 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50607 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50611 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50613 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50616 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50618 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50627 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50636 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50638 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50640 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50642 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50644 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50647 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50653 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50655 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50657 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50660 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50662 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50673 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50677 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50679 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50681 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50683 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50685 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50687 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50694 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50696 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50698 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50701 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50703 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50712 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50717 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50719 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50722 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50724 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50727 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50729 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50735 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50739 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50741 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50745 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50750 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50759 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50764 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50766 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50768 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50770 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50772 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50774 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50777 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50780 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50782 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50785 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50788 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50797 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50800 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50802 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50815 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50819 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50821 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50825 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50828 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50830 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50832 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50835 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50842 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50853 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50856 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50859 - "GET /api/submissions/301d5b94-db02-4f3e-9b55-eb2cebd2220b HTTP/1.1" 404 Not Found
