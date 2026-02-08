@@ -209,7 +209,7 @@ Based on the PRD, the backend needs:
 - [x] 5.2: Implement ADK session state initialization from submission data and deletion (or temp use the adk docs mcp server to understand the documentation and best practices for this.)
 - [x] 5.3: Create background task for running grading pipeline
 - [x] 5.4: Store grading results in database (grading_results table)
-- [ ] 5.5: Implement error handling for agent failures
+- [x] 5.5: Implement error handling for agent failures
 - [ ] 5.6: Test full grading pipeline with real submission via curl.
 
 ### Phase 6: Fixing (Backend Route Updates + Non-Unit Testing)
@@ -482,3 +482,58 @@ IN_PROGRESS
 - If extraction or parsing fails, an error is logged but the submission status is still updated to COMPLETE.
 - The `raw_report` column stores the complete JSON representation for debugging and future schema migrations.
 - Next task (5.5) will focus on improving error handling for agent failures during execution.
+
+## Iteration Update (Task 5.5 - Sat Feb 7 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 5.5: Implemented comprehensive error handling for agent failures.
+  - **Added timeout controls**:
+    - `TRANSCRIPTION_TIMEOUT_SECONDS = 120` (2 minutes max for audio transcription)
+    - `GRADING_PIPELINE_TIMEOUT_SECONDS = 300` (5 minutes max for agent pipeline)
+    - Implemented timeout enforcement using `asyncio.wait_for()` for both transcription and agent execution
+  - **Structured error handling with phase isolation**:
+    - Phase 1 (Transcription): Isolated try-except with specific error messages for transcription failures
+    - Phase 2 (Grading Pipeline): Isolated try-except for agent execution with event counting and progress logging
+    - Phase 3 (Result Extraction): Isolated try-except for parsing and persisting final report
+  - **Added intermediate agent validation**:
+    - Created `_validate_agent_results()` helper to check all 4 specialist agents produced valid outputs
+    - Validates presence of `scoping_result`, `design_result`, `scale_result`, `tradeoff_result`
+    - Validates each result is a dict (not None, string, or other invalid type)
+  - **Enhanced logging**:
+    - Added event counting for agent pipeline execution to track progress
+    - Added debug-level logging for each agent event during execution
+    - Log intermediate agent results when final report is missing for debugging
+    - Structured error messages with submission_id context
+  - **Graceful session cleanup**:
+    - Track `runner`, `session_user_id`, `session_id_to_cleanup` throughout execution
+    - Added finally block to delete ADK session even on failures
+    - Non-failing cleanup (errors logged as warnings, not exceptions)
+  - **Timeout error messages**:
+    - Specific error messages for transcription timeout vs agent pipeline timeout
+    - Include event count in timeout messages for debugging
+
+### Error Handling Coverage
+1. ✅ Submission not found
+2. ✅ Audio transcription failures (per-file errors, API failures, timeouts)
+3. ✅ Agent pipeline execution failures (API errors, malformed responses, timeouts)
+4. ✅ Missing or invalid intermediate agent results
+5. ✅ Missing final report after agent completion
+6. ✅ Invalid final report structure (Pydantic validation errors)
+7. ✅ Database persistence failures
+8. ✅ Status update failures (even when primary operation fails)
+9. ✅ Session cleanup failures (non-fatal, logged as warnings)
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/services/grading.py` ✅
+- Import validation: Successfully imported timeout constants ✅
+- Compilation check: `uv run python -m compileall app/services/grading.py -q` ✅
+- Timeout constants verified: transcription=120s, grading=300s ✅
+
+### Notes
+- All failures now update submission status to `FAILED` and log detailed error context
+- Timeout enforcement prevents indefinite hanging on API issues
+- ADK session cleanup ensures no resource leaks even on failures
+- Next task (5.6) will test the full grading pipeline end-to-end with real submission data

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import logging
 from pathlib import Path
@@ -33,6 +34,10 @@ PHASE_ORDER: tuple[PhaseName, ...] = (
 DEFAULT_ADK_APP_NAME = "designdual-grading"
 LOGGER = logging.getLogger(__name__)
 
+# Timeout settings for grading pipeline
+GRADING_PIPELINE_TIMEOUT_SECONDS = 300  # 5 minutes max for entire agent pipeline
+TRANSCRIPTION_TIMEOUT_SECONDS = 120  # 2 minutes max for audio transcription
+
 
 def _resolve_artifact_path(path_value: str) -> Path:
     """Resolve a stored artifact path into an existing filesystem path."""
@@ -58,6 +63,40 @@ def _resolve_artifact_path(path_value: str) -> Path:
 def _read_file_as_base64(file_path: Path) -> str:
     """Read a binary file and return base64-encoded text."""
     return base64.b64encode(file_path.read_bytes()).decode("utf-8")
+
+
+def _validate_agent_results(session_state: Dict[str, Any], submission_id: str) -> None:
+    """Validate that all required agent results are present in session state.
+
+    Args:
+        session_state: The ADK session state dictionary.
+        submission_id: Submission ID for logging purposes.
+
+    Raises:
+        ValueError: If any required agent result is missing or invalid.
+    """
+    required_results = ["scoping_result", "design_result", "scale_result", "tradeoff_result"]
+    missing_results = [key for key in required_results if not session_state.get(key)]
+
+    if missing_results:
+        LOGGER.error(
+            "Missing agent results for submission %s: %s",
+            submission_id,
+            ", ".join(missing_results),
+        )
+        raise ValueError(f"Agent pipeline produced incomplete results: missing {missing_results}")
+
+    # Validate that each result is a dict (not None, not a string, etc.)
+    for key in required_results:
+        result = session_state.get(key)
+        if not isinstance(result, dict):
+            LOGGER.error(
+                "Invalid agent result type for %s in submission %s: %s",
+                key,
+                submission_id,
+                type(result).__name__,
+            )
+            raise ValueError(f"Agent result '{key}' is invalid: expected dict, got {type(result).__name__}")
 
 
 async def build_submission_bundle(
@@ -311,87 +350,236 @@ async def get_grading_result(
 
 
 async def run_grading_pipeline_background(submission_id: str) -> None:
-    """Run transcription + grading asynchronously for a submission."""
+    """Run transcription + grading asynchronously for a submission.
+
+    This function handles the complete grading lifecycle with comprehensive error handling:
+    1. Transcription phase - converts audio to text
+    2. Agent grading phase - runs multi-agent evaluation pipeline
+    3. Result persistence - saves grading report to database
+
+    Failures at any stage will mark the submission as FAILED and log detailed errors.
+    """
     connection = await get_db_connection()
+    runner = None
+    session_user_id = None
+    session_id_to_cleanup = None
+
     try:
+        # Validate submission exists
         submission = await get_submission_by_id(connection, submission_id)
         if submission is None:
             LOGGER.error("Submission not found for background grading: %s", submission_id)
             return
 
-        await update_submission_status(
-            connection,
-            submission_id,
-            SubmissionStatus.TRANSCRIBING,
-        )
+        # Phase 1: Transcription
+        try:
+            await update_submission_status(
+                connection,
+                submission_id,
+                SubmissionStatus.TRANSCRIBING,
+            )
 
-        audio_paths = [
-            submission.phases.get(phase).audio_path if submission.phases.get(phase) else None
-            for phase in PHASE_ORDER
-        ]
-        transcripts = await transcribe_audio_files_parallel(audio_paths)
-        transcript_map = {
-            phase: transcripts[index] for index, phase in enumerate(PHASE_ORDER)
-        }
-        await update_submission_transcripts(connection, submission_id, transcript_map)
+            audio_paths = [
+                submission.phases.get(phase).audio_path if submission.phases.get(phase) else None
+                for phase in PHASE_ORDER
+            ]
 
-        await update_submission_status(connection, submission_id, SubmissionStatus.GRADING)
-
-        submission_bundle = await build_submission_bundle(connection, submission_id)
-        runner = InMemoryRunner(agent=grading_pipeline, app_name=DEFAULT_ADK_APP_NAME)
-        user_id = f"submission-{submission_id}"
-        session = await initialize_grading_session(
-            session_service=runner.session_service,
-            submission_bundle=submission_bundle,
-            user_id=user_id,
-            app_name=DEFAULT_ADK_APP_NAME,
-            session_id=submission_id,
-        )
-
-        input_text = _format_pipeline_input(submission_bundle)
-        user_content = types.Content(
-            role="user",
-            parts=[types.Part(text=input_text)],
-        )
-
-        async for _ in runner.run_async(
-            user_id=user_id,
-            session_id=session.id,
-            new_message=user_content,
-        ):
-            pass
-
-        # Retrieve the final grading report from session state
-        final_session = await runner.session_service.get_session(
-            app_name=DEFAULT_ADK_APP_NAME,
-            user_id=user_id,
-            session_id=session.id,
-        )
-
-        if final_session and final_session.state.get("final_report"):
+            # Apply timeout to transcription
             try:
-                # Parse the final report into a GradingReport object
-                final_report_data = final_session.state["final_report"]
-                grading_report = GradingReport.model_validate(final_report_data)
-
-                # Save to database
-                await save_grading_result(connection, submission_id, grading_report)
-                LOGGER.info("Saved grading result for submission %s", submission_id)
-            except Exception:
-                LOGGER.exception(
-                    "Failed to save grading result for submission %s", submission_id
+                transcripts = await asyncio.wait_for(
+                    transcribe_audio_files_parallel(audio_paths),
+                    timeout=TRANSCRIPTION_TIMEOUT_SECONDS,
+                )
+            except asyncio.TimeoutError:
+                LOGGER.error(
+                    "Transcription timed out after %d seconds for submission %s",
+                    TRANSCRIPTION_TIMEOUT_SECONDS,
+                    submission_id,
+                )
+                raise ValueError(
+                    f"Audio transcription timed out after {TRANSCRIPTION_TIMEOUT_SECONDS} seconds"
                 )
 
+            transcript_map = {
+                phase: transcripts[index] for index, phase in enumerate(PHASE_ORDER)
+            }
+            await update_submission_transcripts(connection, submission_id, transcript_map)
+            LOGGER.info("Transcription completed for submission %s", submission_id)
+        except Exception as e:
+            LOGGER.exception("Transcription failed for submission %s", submission_id)
+            raise ValueError(f"Audio transcription failed: {e}") from e
+
+        # Phase 2: Grading pipeline execution
+        try:
+            await update_submission_status(connection, submission_id, SubmissionStatus.GRADING)
+
+            submission_bundle = await build_submission_bundle(connection, submission_id)
+            runner = InMemoryRunner(agent=grading_pipeline, app_name=DEFAULT_ADK_APP_NAME)
+            user_id = f"submission-{submission_id}"
+            session_user_id = user_id  # Track for cleanup
+            session_id_to_cleanup = submission_id  # Track for cleanup
+
+            # Initialize session with grading state
+            session = await initialize_grading_session(
+                session_service=runner.session_service,
+                submission_bundle=submission_bundle,
+                user_id=user_id,
+                app_name=DEFAULT_ADK_APP_NAME,
+                session_id=submission_id,
+            )
+
+            input_text = _format_pipeline_input(submission_bundle)
+            user_content = types.Content(
+                role="user",
+                parts=[types.Part(text=input_text)],
+            )
+
+            # Run agent pipeline - this executes all agents sequentially/parallel
+            event_count = 0
+            try:
+                # Wrap agent execution with timeout
+                async def run_agent_pipeline():
+                    nonlocal event_count
+                    async for event in runner.run_async(
+                        user_id=user_id,
+                        session_id=session.id,
+                        new_message=user_content,
+                    ):
+                        event_count += 1
+                        # Log agent progress (events include agent completions, tool calls, etc.)
+                        if hasattr(event, 'type'):
+                            LOGGER.debug(
+                                "Agent pipeline event %d for submission %s: %s",
+                                event_count,
+                                submission_id,
+                                event.type,
+                            )
+
+                await asyncio.wait_for(
+                    run_agent_pipeline(),
+                    timeout=GRADING_PIPELINE_TIMEOUT_SECONDS,
+                )
+            except asyncio.TimeoutError:
+                LOGGER.error(
+                    "Agent pipeline timed out after %d seconds for submission %s (%d events processed)",
+                    GRADING_PIPELINE_TIMEOUT_SECONDS,
+                    submission_id,
+                    event_count,
+                )
+                raise ValueError(
+                    f"Agent pipeline timed out after {GRADING_PIPELINE_TIMEOUT_SECONDS} seconds"
+                )
+            except Exception as e:
+                LOGGER.exception(
+                    "Agent pipeline execution failed for submission %s after %d events",
+                    submission_id,
+                    event_count,
+                )
+                raise ValueError(f"Agent execution failed: {e}") from e
+
+            LOGGER.info(
+                "Agent pipeline completed for submission %s with %d events",
+                submission_id,
+                event_count,
+            )
+
+        except Exception as e:
+            LOGGER.exception("Grading pipeline failed for submission %s", submission_id)
+            raise ValueError(f"Grading pipeline failed: {e}") from e
+
+        # Phase 3: Result extraction and persistence
+        try:
+            # Retrieve the final grading report from session state
+            final_session = await runner.session_service.get_session(
+                app_name=DEFAULT_ADK_APP_NAME,
+                user_id=user_id,
+                session_id=session.id,
+            )
+
+            if not final_session:
+                raise ValueError("Session not found after agent pipeline completion")
+
+            # Validate intermediate agent results before checking final report
+            try:
+                _validate_agent_results(final_session.state, submission_id)
+            except ValueError as e:
+                LOGGER.error(
+                    "Intermediate agent validation failed for submission %s: %s",
+                    submission_id,
+                    e,
+                )
+                # Continue to check for final_report - synthesis agent may have still succeeded
+                # even if intermediate results are malformed
+
+            if not final_session.state.get("final_report"):
+                # Log intermediate agent results for debugging
+                LOGGER.error(
+                    "No final_report in session state for submission %s. "
+                    "Intermediate results: scoping=%s, design=%s, scale=%s, tradeoff=%s",
+                    submission_id,
+                    bool(final_session.state.get("scoping_result")),
+                    bool(final_session.state.get("design_result")),
+                    bool(final_session.state.get("scale_result")),
+                    bool(final_session.state.get("tradeoff_result")),
+                )
+                raise ValueError("Agent pipeline completed but produced no final report")
+
+            # Parse the final report into a GradingReport object
+            final_report_data = final_session.state["final_report"]
+            try:
+                grading_report = GradingReport.model_validate(final_report_data)
+            except Exception as e:
+                LOGGER.exception(
+                    "Invalid grading report structure for submission %s. Raw data: %s",
+                    submission_id,
+                    final_report_data,
+                )
+                raise ValueError(f"Grading report validation failed: {e}") from e
+
+            # Save to database
+            await save_grading_result(connection, submission_id, grading_report)
+            LOGGER.info("Saved grading result for submission %s", submission_id)
+
+        except Exception as e:
+            LOGGER.exception("Result extraction/persistence failed for submission %s", submission_id)
+            raise ValueError(f"Result persistence failed: {e}") from e
+
+        # Mark submission as complete
         await update_submission_status(connection, submission_id, SubmissionStatus.COMPLETE)
-    except Exception:
-        LOGGER.exception("Background grading failed for submission %s", submission_id)
+        LOGGER.info("Grading completed successfully for submission %s", submission_id)
+
+    except Exception as outer_exception:
+        # Top-level error handler - catches all failures
+        LOGGER.exception("Background grading failed for submission %s: %s", submission_id, outer_exception)
         try:
             await update_submission_status(connection, submission_id, SubmissionStatus.FAILED)
-        except Exception:
+        except Exception as status_update_error:
+            # Even if we can't update status, log the error
             LOGGER.exception(
-                "Failed to update submission status to failed for %s", submission_id
+                "Failed to update submission status to failed for %s: %s",
+                submission_id,
+                status_update_error,
             )
     finally:
+        # Clean up ADK session if it was created
+        if runner and session_user_id and session_id_to_cleanup:
+            try:
+                await delete_grading_session(
+                    session_service=runner.session_service,
+                    user_id=session_user_id,
+                    session_id=session_id_to_cleanup,
+                    app_name=DEFAULT_ADK_APP_NAME,
+                )
+                LOGGER.info("Cleaned up grading session for submission %s", submission_id)
+            except Exception as cleanup_error:
+                # Log but don't fail if cleanup fails
+                LOGGER.warning(
+                    "Failed to clean up grading session for submission %s: %s",
+                    submission_id,
+                    cleanup_error,
+                )
+
+        # Always clean up database connection
         await connection.close()
 
 
