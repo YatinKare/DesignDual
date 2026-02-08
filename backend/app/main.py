@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import problems_router, submissions_router
+from app.routes import dashboard_router, problems_router, submissions_router
 
 # Load .env from project root first (contains GOOGLE_API_KEY and other secrets),
 # then backend/.env for backend-specific config (override=False keeps root values).
@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
 
+    app.include_router(dashboard_router)
     app.include_router(problems_router)
     app.include_router(submissions_router)
 

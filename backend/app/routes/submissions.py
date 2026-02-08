@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
 import os
-from typing import Dict, Optional
+from typing import Any, AsyncGenerator, Dict, Optional
 
 import aiosqlite
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from sse_starlette.sse import EventSourceResponse
 
-from app.models import PhaseArtifacts, PhaseName, Submission
-from app.models.contract_v2 import SubmissionResultV2
+from app.models import PhaseArtifacts, PhaseName, Submission, SubmissionStatus
+from app.models.contract_v2 import StreamStatus, SubmissionResultV2
 from app.services.artifacts import save_submission_artifacts_batch
-from app.services.database import db_connection
+from app.services.database import db_connection, get_db_connection
 from app.services.file_storage import get_file_storage_service
 from app.services.grading import get_grading_result, run_grading_pipeline_background
+from app.services.grading_events import get_grading_events
 from app.services.problems import get_problem_by_id
 from app.services.result_transformer import build_submission_result_v2
 from app.services.submissions import create_submission, get_submission_by_id
@@ -295,6 +299,175 @@ async def get_submission_result(
             status_code=500,
             detail="Failed to build submission result",
         )
+
+
+# SSE polling configuration
+SSE_POLL_INTERVAL_SECONDS = 0.5  # How often to poll for new events
+SSE_TIMEOUT_SECONDS = 600  # Maximum time to wait for grading completion (10 minutes)
+
+
+async def _generate_grading_events(
+    submission_id: str,
+) -> AsyncGenerator[Dict[str, Any], None]:
+    """Async generator that yields grading progress events for SSE streaming.
+
+    This function polls the grading_events table for new events and yields them
+    as SSE-formatted dict payloads. It continues until a terminal status
+    (complete or failed) is reached, or until timeout.
+
+    Args:
+        submission_id: ID of the submission being graded
+
+    Yields:
+        Dict with event data: status, message, phase (optional), progress (optional),
+        and result (optional for complete status)
+    """
+    last_event_count = 0
+    elapsed_time = 0.0
+
+    while elapsed_time < SSE_TIMEOUT_SECONDS:
+        connection = await get_db_connection()
+        try:
+            # Check if submission exists
+            submission = await get_submission_by_id(connection, submission_id)
+            if submission is None:
+                yield {
+                    "data": json.dumps({
+                        "status": "failed",
+                        "message": f"Submission {submission_id} not found",
+                    })
+                }
+                return
+
+            # Fetch all events for this submission
+            events = await get_grading_events(connection, submission_id)
+
+            # Yield any new events we haven't sent yet
+            if len(events) > last_event_count:
+                for event in events[last_event_count:]:
+                    event_data: Dict[str, Any] = {
+                        "status": event.status.value,
+                        "message": event.message,
+                    }
+                    if event.phase:
+                        event_data["phase"] = event.phase.value
+                    if event.progress is not None:
+                        event_data["progress"] = event.progress
+
+                    # For complete status, include the final result
+                    if event.status == StreamStatus.COMPLETE:
+                        try:
+                            grading_report = await get_grading_result(connection, submission_id)
+                            if grading_report:
+                                result_v2 = await build_submission_result_v2(
+                                    connection, submission, grading_report
+                                )
+                                event_data["result"] = result_v2.model_dump(mode="json")
+                        except Exception as e:
+                            logger.warning(
+                                f"Failed to include result in complete event for {submission_id}: {e}"
+                            )
+
+                    yield {"data": json.dumps(event_data)}
+
+                last_event_count = len(events)
+
+                # Check for terminal status
+                last_event = events[-1]
+                if last_event.status in (StreamStatus.COMPLETE, StreamStatus.FAILED):
+                    return
+
+            # Also check submission status directly as a fallback
+            # (in case grading completed without an event)
+            if submission.status in (SubmissionStatus.COMPLETE, SubmissionStatus.FAILED):
+                # If we haven't already yielded the terminal event
+                if not events or events[-1].status not in (StreamStatus.COMPLETE, StreamStatus.FAILED):
+                    if submission.status == SubmissionStatus.COMPLETE:
+                        try:
+                            grading_report = await get_grading_result(connection, submission_id)
+                            result_v2 = None
+                            if grading_report:
+                                result_v2 = await build_submission_result_v2(
+                                    connection, submission, grading_report
+                                )
+                            yield {
+                                "data": json.dumps({
+                                    "status": "complete",
+                                    "message": "The verdict is sealed. View your complete evaluation.",
+                                    "progress": 1.0,
+                                    "result": result_v2.model_dump(mode="json") if result_v2 else None,
+                                })
+                            }
+                        except Exception as e:
+                            logger.warning(f"Failed to build result for {submission_id}: {e}")
+                            yield {
+                                "data": json.dumps({
+                                    "status": "complete",
+                                    "message": "The verdict is sealed. View your complete evaluation.",
+                                    "progress": 1.0,
+                                })
+                            }
+                    else:
+                        yield {
+                            "data": json.dumps({
+                                "status": "failed",
+                                "message": "The Council has encountered an error evaluating your spell.",
+                            })
+                        }
+                return
+
+        finally:
+            await connection.close()
+
+        # Wait before polling again
+        await asyncio.sleep(SSE_POLL_INTERVAL_SECONDS)
+        elapsed_time += SSE_POLL_INTERVAL_SECONDS
+
+    # Timeout reached - yield error event
+    yield {
+        "data": json.dumps({
+            "status": "failed",
+            "message": "Grading timed out. Please try again later.",
+        })
+    }
+
+
+@router.get("/api/submissions/{submission_id}/stream")
+async def stream_grading_progress(submission_id: str) -> EventSourceResponse:
+    """Stream grading progress events for a submission via Server-Sent Events.
+
+    This endpoint provides real-time updates as the grading pipeline processes
+    a submission. Events are emitted for each phase of evaluation, and the
+    final event includes the complete grading result.
+
+    Event Format:
+        data: {"status": "processing", "message": "...", "progress": 0.1}
+        data: {"status": "clarify", "message": "...", "phase": "clarify", "progress": 0.3}
+        ...
+        data: {"status": "complete", "message": "...", "progress": 1.0, "result": {...}}
+
+    Status Values:
+        - "queued": Waiting to be processed
+        - "processing": Transcribing audio / preparing
+        - "clarify", "estimate", "design", "explain": Evaluating specific phases
+        - "synthesizing": Combining agent outputs
+        - "complete": Grading finished (includes result)
+        - "failed": Error occurred
+
+    Args:
+        submission_id: ID of the submission to track
+
+    Returns:
+        EventSourceResponse: SSE stream of grading events
+    """
+    return EventSourceResponse(
+        _generate_grading_events(submission_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
 
 
 __all__ = ["router"]

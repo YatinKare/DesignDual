@@ -5,6 +5,7 @@ from .artifacts import (
     save_submission_artifact,
     save_submission_artifacts_batch,
 )
+from .dashboard import get_score_history, get_score_summary
 from .database import db_connection, get_db_connection
 from .grading import (
     build_grading_session_state,

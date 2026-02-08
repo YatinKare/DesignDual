@@ -239,17 +239,18 @@ Based on the PRD, the backend needs:
 - [x] 7.9: User test new agentic system with examples in the temp/ folder by running `uv run ...` and **manually inspecting output** no unit tests allowed. No shortcuts allowed.
 
 ### Phase 8: Server-Sent Events (Real-time Progress Streaming)
-- [ ] 8.1: Install and configure sse-starlette for FastAPI
-- [ ] 8.2: Implement GET /api/submissions/{id}/stream SSE endpoint
-- [ ] 8.3: Create event generator that yields grading progress updates
-- [ ] 8.4: Emit themed status messages (magic narrative)
-- [ ] 8.5: Emit final result when grading completes
-- [ ] 8.6: Test SSE connection and event streaming
+- REMINDER: USE `adk-docs` mcp for best google-adk best practices and examples for each subtask.
+- [x] 8.1: Install and configure sse-starlette for FastAPI
+- [x] 8.2: Implement GET /api/submissions/{id}/stream SSE endpoint
+- [x] 8.3: Create event generator that yields grading progress updates
+- [x] 8.4: Emit themed status messages (magic narrative)
+- [x] 8.5: Emit final result when grading completes
+- [x] 8.6: Test SSE connection and event streaming
 
 ### Phase 9: Results Retrieval & Dashboard (Read Endpoints)
-- [ ] 9.1: Implement GET /api/submissions/{id} endpoint (fetch grading result)
-- [ ] 9.2: Implement GET /api/dashboard endpoint (user score history - stretch goal)
-- [ ] 9.3: Test results retrieval
+- [x] 9.1: Implement GET /api/submissions/{id} endpoint (fetch grading result) - ALREADY DONE IN TASK 6.8
+- [x] 9.2: Implement GET /api/dashboard endpoint (user score history - stretch goal)
+- [x] 9.3: Test results retrieval
 - [ ] 9.4: Add proper error handling for not-found cases
 
 ### Phase 10: Frontend Integration Points (Backend Ready for Frontend)
@@ -1682,4 +1683,97 @@ The v2 test now works because:
 - Task 7.6 (ContractGuardAgent) is optional and can be skipped for hackathon
 - V2 pipeline produces high-quality, actionable feedback conforming to Screen 2 contract
 - Next phase (8) will implement SSE streaming for real-time progress updates
+
+## Iteration Update (Phase 8: SSE Streaming - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Tasks 8.1-8.6: Implemented complete SSE streaming for grading progress.
+  - **Verified `sse-starlette` already installed** in `pyproject.toml` (≥2.0.0)
+  - **Created** `GET /api/submissions/{submission_id}/stream` SSE endpoint in `backend/app/routes/submissions.py`
+  - **Implemented** `_generate_grading_events()` async generator (130+ lines):
+    - Polls `grading_events` table for new events every 0.5 seconds
+    - Yields SSE-formatted events with status, message, phase, progress
+    - Automatically detects terminal states (complete/failed) and stops
+    - Includes full `SubmissionResultV2` payload on complete status
+    - Handles submission not found, timeout (10 min max), and fallback scenarios
+  - **SSE Configuration**:
+    - Poll interval: 0.5 seconds
+    - Timeout: 600 seconds (10 minutes)
+    - Headers: `Cache-Control: no-cache`, `X-Accel-Buffering: no` (for nginx)
+  - **Themed Messages** preserved from grading service:
+    - Processing: "Your spell has been submitted to the Council..."
+    - Clarify: "The Clarification Sage examines your problem understanding..."
+    - Estimate: "The Estimation Oracle calculates your capacity planning..."
+    - Design: "The Architecture Archmage studies your system blueprint..."
+    - Explain: "The Wisdom Keeper weighs your reasoning and tradeoffs..."
+    - Synthesizing: "The Council deliberates and forges the final verdict..."
+    - Complete: "The verdict is sealed. View your complete evaluation."
+  - **Added imports**:
+    - `EventSourceResponse` from `sse_starlette.sse`
+    - `get_grading_events` from services
+    - `StreamStatus`, `SubmissionStatus` from models
+
+### Validation
+- Syntax validation: `uv run python -m py_compile app/routes/submissions.py` ✅
+- Import validation: Successfully imported `stream_grading_progress` endpoint ✅
+- End-to-end test with curl:
+  - `curl http://127.0.0.1:8000/api/submissions/b5bd9825-5c43-497c-885d-7903e63b502b/stream`
+  - Received complete SSE event with status="complete" and full SubmissionResultV2 payload ✅
+  - Includes all phase_scores, evidence, rubric, radar, strengths/weaknesses, next_attempt_plan ✅
+
+### SSE Event Sequence (v2 Compliant)
+```
+1. data: {"status": "processing", "message": "...", "progress": 0.0}
+2. data: {"status": "processing", "message": "...", "progress": 0.1}
+3. data: {"status": "processing", "message": "...", "progress": 0.2}
+4. data: {"status": "clarify", "phase": "clarify", "message": "...", "progress": 0.3}
+5. data: {"status": "estimate", "phase": "estimate", "message": "...", "progress": 0.4}
+6. data: {"status": "design", "phase": "design", "message": "...", "progress": 0.5}
+7. data: {"status": "explain", "phase": "explain", "message": "...", "progress": 0.6}
+8. data: {"status": "synthesizing", "message": "...", "progress": 0.85}
+9. data: {"status": "complete", "message": "...", "progress": 1.0, "result": {...}}
+```
+
+### Notes
+- Phase 8 (SSE Streaming) is now complete with all 6 tasks done
+- SSE endpoint fully integrates with grading_events table created in Phase 6
+- Terminal event includes full SubmissionResultV2 for immediate display
+- Fallback logic handles edge cases where events table may be incomplete
+- Next phase (9) focuses on Results Retrieval & Dashboard endpoints
+
+## Iteration Update (Task 9.2 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 9.1: Verified GET /api/submissions/{id} was already implemented in Task 6.8.
+- Task 9.2: Implemented GET /api/dashboard endpoint (stretch goal).
+  - **Created** `backend/app/services/dashboard.py`:
+    - `get_score_history()` - fetches completed submissions with scores
+    - `get_score_summary()` - calculates aggregate stats (total, avg, best, worst, verdict breakdown)
+  - **Created** `backend/app/routes/dashboard.py`:
+    - `GET /api/dashboard` - returns summary + history
+    - `GET /api/dashboard/history` - returns history only (with limit param)
+    - `GET /api/dashboard/summary` - returns summary only
+  - **Registered** dashboard router in `main.py` and `routes/__init__.py`
+- Task 9.3: Tested results retrieval via curl.
+
+### Validation
+- Syntax validation: `uv run python -m py_compile` for all new files ✅
+- End-to-end test: `curl http://127.0.0.1:8000/api/dashboard`
+  - Returned 4 completed submissions
+  - Summary: total=4, avg=8.31, best=8.62, worst=7.94
+  - Verdict breakdown: hire=4
+  - All fields present (submission_id, problem_id, problem_title, difficulty, overall_score, verdict, timestamps) ✅
+- Tested /api/dashboard/summary endpoint ✅
+- Tested /api/dashboard/history?limit=2 endpoint ✅
+
+### Notes
+- The dashboard endpoint is now functional
+- Returns data from joined submissions + grading_results + problems tables
+- Next task (9.4) will add proper error handling for not-found cases
 
