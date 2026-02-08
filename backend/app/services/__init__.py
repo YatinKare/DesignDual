@@ -21,6 +21,7 @@ from .grading_events import (
     save_grading_event,
 )
 from .problems import list_problem_summaries
+from .result_transformer import build_submission_result_v2
 from .submissions import (
     create_submission,
     get_submission_by_id,
@@ -56,6 +57,7 @@ __all__ = [
     "save_submission_artifact",
     "save_submission_artifacts_batch",
     "get_submission_artifacts",
+    "build_submission_result_v2",
     "GradingEvent",
     "save_grading_event",
     "get_grading_events",

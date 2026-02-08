@@ -221,7 +221,7 @@ Based on the PRD, the backend needs:
 - [x] 6.5: Persist submission artifacts (canvas/audio) with per-phase mapping and URLs
 - [x] 6.6: Set submission status lifecycle: queued -> processing
 - [x] 6.7: Standardize SSE stream statuses to new phase list + include optional progress/phase
-- [ ] 6.8: Upgrade GET /api/submissions/{id} to full SubmissionResultV2 payload + result_version
+- [x] 6.8: Upgrade GET /api/submissions/{id} to full SubmissionResultV2 payload + result_version
 - [ ] 6.9: Add compatibility mapping for legacy stream statuses
 - [ ] 6.10: Add/adjust storage tables: submissions, submission_artifacts, submission_transcripts, grading_events
 - [ ] 6.11: Non-unit smoke test by running `uv run python -m app.agents.test_pipeline` and inspecting `backend/temp/agent_test_results.json`
@@ -811,12 +811,75 @@ IN_PROGRESS
 - The `QUEUED` status indicates the submission is waiting for background processing
 - Old `RECEIVED` status is no longer used (legacy data was migrated to `queued`)
 
-## Iteration Update (Task 6.7 - Sat Feb 8 2026)
+## Iteration Update (Task 6.8 - Sat Feb 8 2026)
 
 ### Status
 IN_PROGRESS
 
 ### Completed This Iteration
+- Task 6.8: Implemented GET /api/submissions/{id} endpoint with full SubmissionResultV2 payload.
+  - **Created** `backend/app/services/result_transformer.py` (456 lines):
+    - Compatibility layer that transforms v1 GradingReport → v2 SubmissionResultV2
+    - Maps v1 dimensions (scoping/design/scale/tradeoff) → v2 phases (clarify/estimate/design/explain)
+    - Generates exactly 4 phase scores with 3-6 feedback bullets each
+    - Generates exactly 4 evidence items with snapshot URLs (transcripts empty for v1 compat)
+    - Computes rubric items as weighted averages using phase_weights from problem definition
+    - Generates radar dimensions: clarity, structure, power, wisdom
+    - Extracts strengths/weaknesses from dimension feedback
+    - Creates next_attempt_plan (top 3 improvements) and follow_up_questions (3+)
+    - Generates reference outline with 4 sections
+  - **Updated** `backend/app/routes/submissions.py`:
+    - Added GET `/api/submissions/{id}` endpoint
+    - Returns 404 if submission not found
+    - Returns 404 if submission not complete (still queued/processing/grading)
+    - Returns 404 if grading result not found
+    - Returns 500 with logging if transformation fails
+    - Returns full SubmissionResultV2 with `result_version=2` on success
+  - **Properly handled Pydantic models**:
+    - DimensionScore: accessed `.score`, `.feedback`, `.strengths`, `.weaknesses` attributes
+    - RubricDefinition: accessed `.label`, `.description`, `.phase_weights` attributes
+    - Added isinstance checks and fallbacks for compatibility
+
+### Validation
+- Syntax validation: `uv run python -m py_compile` passes ✅
+- End-to-end test with completed submission `b5bd9825-5c43-497c-885d-7903e63b502b` ✅
+  - Response: 200 OK with 544-line JSON payload
+  - Contract compliance verified:
+    - ✅ result_version: 2
+    - ✅ phase_scores: exactly 4 items (clarify, design, estimate, explain)
+    - ✅ evidence: exactly 4 items with snapshot URLs
+    - ✅ rubric: 5 items with computed_from phases and status (pass/partial/fail)
+    - ✅ radar: 4 dimensions (clarity, structure, power, wisdom)
+    - ✅ overall_score: 8.4, verdict: hire
+    - ✅ strengths: 11 items, weaknesses: 11 items
+    - ✅ next_attempt_plan: 3 items
+    - ✅ follow_up_questions: 3 items
+    - ✅ reference_outline: 4 sections
+    - ✅ metadata: submission_id, problem, timestamps present
+- Error handling tests:
+  - Non-complete submission (queued): Returns 404 with clear message ✅
+  - Non-existent submission: Returns 404 ✅
+- Test results documented in: `backend/temp/task_6.8_test_results.md`
+
+### Notes
+- This is a **v1→v2 compatibility layer** that bridges the gap until Phase 7 implements true phase-based agents
+- The transformer maps v1 dimension scores to v2 phase scores using a logical mapping:
+  - scoping → clarify (problem understanding happens during clarification)
+  - design → design (direct mapping)
+  - scale → estimate (scale analysis relates to capacity estimation)
+  - tradeoff → explain (tradeoff reasoning happens during explanation)
+- Rubric scores are computed as weighted averages of relevant phase scores using `phase_weights` from problem definition
+- Empty fields in v2 contract (transcripts, highlights, noticed) are due to v1 data limitations
+- Generic templates used for follow_up_questions and reference_outline (v1 compatibility)
+- The endpoint is fully functional and returns valid v2 contract data for all existing submissions
+- Next task (6.9) will add compatibility mapping for legacy SSE stream statuses
+
+## Iteration Update (Task 6.7 - Sat Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed Previously (Task 6.7)
 - Task 6.7: Standardized SSE stream statuses to v2 phase list with progress/phase fields.
   - **Verified StreamStatus enum** contains all required v2 statuses:
     - `queued`, `processing`, `clarify`, `estimate`, `design`, `explain`, `synthesizing`, `complete`, `failed`

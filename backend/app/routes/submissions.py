@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Dict, Optional
 
@@ -9,14 +10,17 @@ import aiosqlite
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 
 from app.models import PhaseArtifacts, PhaseName, Submission
+from app.models.contract_v2 import SubmissionResultV2
 from app.services.artifacts import save_submission_artifacts_batch
 from app.services.database import db_connection
 from app.services.file_storage import get_file_storage_service
-from app.services.grading import run_grading_pipeline_background
+from app.services.grading import get_grading_result, run_grading_pipeline_background
 from app.services.problems import get_problem_by_id
-from app.services.submissions import create_submission
+from app.services.result_transformer import build_submission_result_v2
+from app.services.submissions import create_submission, get_submission_by_id
 
 router = APIRouter(tags=["submissions"])
+logger = logging.getLogger(__name__)
 
 
 def _validate_canvas_file(canvas_file: UploadFile, phase_name: str) -> None:
@@ -230,6 +234,67 @@ async def create_submission_endpoint(
     background_tasks.add_task(run_grading_pipeline_background, submission.id)
 
     return {"submission_id": submission.id}
+
+
+@router.get("/api/submissions/{submission_id}", response_model=SubmissionResultV2)
+async def get_submission_result(
+    submission_id: str,
+    connection: aiosqlite.Connection = Depends(db_connection),
+) -> SubmissionResultV2:
+    """Retrieve the complete grading result for a submission.
+
+    Returns a SubmissionResultV2 payload conforming to the Screen 2 contract.
+    This includes phase scores, evidence, rubric breakdown, radar chart,
+    strengths/weaknesses, next attempt plan, and reference outline.
+
+    Args:
+        submission_id: ID of the submission
+        connection: Database connection
+
+    Returns:
+        SubmissionResultV2 with complete grading details
+
+    Raises:
+        HTTPException: 404 if submission not found or not yet graded
+    """
+    # Fetch submission
+    submission = await get_submission_by_id(connection, submission_id)
+    if submission is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Submission {submission_id} not found",
+        )
+
+    # Check if submission has been graded
+    if submission.status.value not in ["complete", "failed"]:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Submission {submission_id} is still {submission.status.value}. Grading not complete yet.",
+        )
+
+    # Fetch grading result
+    grading_report = await get_grading_result(connection, submission_id)
+    if grading_report is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Grading result for submission {submission_id} not found",
+        )
+
+    # Transform v1 grading report to v2 SubmissionResultV2
+    try:
+        result_v2 = await build_submission_result_v2(
+            connection, submission, grading_report
+        )
+        return result_v2
+    except Exception as e:
+        logger.error(
+            f"Failed to build SubmissionResultV2 for {submission_id}: {e}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to build submission result",
+        )
 
 
 __all__ = ["router"]
