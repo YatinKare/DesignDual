@@ -21,6 +21,7 @@ from .phase_agents import (
 from .final_assembler_v2 import create_final_assembler_v2
 from .plan_outline_agent import create_plan_outline_agent
 from .rubric_radar_agent import create_rubric_radar_agent
+from .contract_guard_agent import create_contract_guard_agent
 
 __all__ = [
     # Pipeline and orchestrators (v1)
@@ -43,6 +44,7 @@ __all__ = [
     "create_rubric_radar_agent",
     "create_plan_outline_agent",
     "create_final_assembler_v2",
+    "create_contract_guard_agent",
     # Utilities
     "AgentResult",
     "DEFAULT_MODEL",

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from google.adk.agents import ParallelAgent, SequentialAgent
 
+from .contract_guard_agent import create_contract_guard_agent
 from .final_assembler_v2 import create_final_assembler_v2
 from .phase_agents import (
     create_clarify_phase_agent,
@@ -54,6 +55,7 @@ def create_grading_pipeline_v2() -> SequentialAgent:
             - rubric_radar: RubricRadarAgent output (rubric items, radar, verdict) - ✅ IMPLEMENTED
             - plan_outline: PlanOutlineAgent output (next_attempt_plan, follow_up_questions, reference) - ✅ IMPLEMENTED
             - final_report_v2: FinalAssemblerV2 output (complete SubmissionResultV2) - ✅ IMPLEMENTED
+            - final_report_v2: ContractGuardAgent output (contract-normalized SubmissionResultV2) - ✅ OPTIONAL
     """
     # Create the 4 phase agents
     clarify_agent = create_clarify_phase_agent()
@@ -78,20 +80,23 @@ def create_grading_pipeline_v2() -> SequentialAgent:
     rubric_radar_agent = create_rubric_radar_agent()
     plan_outline_agent = create_plan_outline_agent()
     final_assembler = create_final_assembler_v2()
+    contract_guard = create_contract_guard_agent()
 
     # SequentialAgent: Orchestrates the full v2 pipeline
     # Step 1: Run all 4 phase agents in parallel
     # Step 2: Compute rubric, radar, overall score, and verdict
     # Step 3: Generate next_attempt_plan, follow_up_questions, and reference_outline
     # Step 4: Assemble final SubmissionResultV2
+    # Step 5: ContractGuardAgent validates/repairs final_report_v2 invariants
     grading_pipeline_v2 = SequentialAgent(
         name="GradingPipelineV2",
-        description="Full v2 grading pipeline: phase agents → rubric/radar → plan/outline → final assembly",
+        description="Full v2 grading pipeline: phase agents → rubric/radar → plan/outline → final assembly → contract guard",
         sub_agents=[
             phase_evaluation_panel,
             rubric_radar_agent,  # ✅ Task 7.3 complete
             plan_outline_agent,  # ✅ Task 7.4 complete
             final_assembler,  # ✅ Task 7.5 complete
+            contract_guard,  # ✅ Task 7.6 complete (optional)
         ],
     )
 

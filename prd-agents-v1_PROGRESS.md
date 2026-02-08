@@ -233,7 +233,7 @@ Based on the PRD, the backend needs:
 - [x] 7.3: Implement RubricRadarAgent (rubric + radar + overall_score + verdict + summary)
 - [x] 7.4: Implement PlanOutlineAgent (next_attempt_plan, follow_up_questions, reference_outline)
 - [x] 7.5: Implement FinalAssemblerV2 (build SubmissionResultV2, enforce 4 phase cards + 4 evidence)
-- [ ] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
+- [x] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
 - [x] 7.7: Update session.state shape to v2 (phase_artifacts, phase outputs, rubric_radar, plan_outline, final_report_v2)
 - [x] 7.8: Update agent prompts to strict JSON with timestamps + evidence per phase (already complete - all agents use JSON_RESPONSE_CONFIG)
 - [x] 7.9: User test new agentic system with examples in the temp/ folder by running `uv run ...` and **manually inspecting output** no unit tests allowed. No shortcuts allowed.
@@ -1848,3 +1848,33 @@ IN_PROGRESS
 - All v2 contract types (SubmissionResultV2, PhaseScore, etc.) are documented
 - SSE event sequence documented with all status values
 - Next task (10.2) will test CORS configuration for frontend connection
+
+---
+
+## Completed This Iteration (2026-02-08 - Task 7.6)
+
+- [x] 7.6: (Optional) Added `ContractGuardAgent` to validate/fix final v2 schema counts and enum values.
+  - Added `backend/app/agents/contract_guard_agent.py`.
+  - Wired it into `GradingPipelineV2` as a final sequential step after `FinalAssemblerV2`.
+  - Exported factory from `backend/app/agents/__init__.py`.
+  - Guard overwrites `final_report_v2` with contract-normalized output.
+
+## Notes (2026-02-08)
+
+- Manual validation run: `uv run python -m app.agents.test_pipeline_v2` (from `backend/`) completed successfully.
+- Output inspection (`backend/temp/pipeline_v2_test_results.json`) confirms:
+  - `result_version = 2`
+  - `phase_scores` count = 4 in order: clarify, estimate, design, explain
+  - `evidence` count = 4 in order: clarify, estimate, design, explain
+  - `radar` count = 4 skills: clarity, structure, power, wisdom
+  - `next_attempt_plan` count = 3
+  - `follow_up_questions` count >= 3
+- Progress-file input mismatch discovered: requested `prd-agents-v2_PROGRESS.md` is absent; updates were appended to existing `prd-agents-v1_PROGRESS.md` per repository state.
+
+## Task List Delta
+
+- [x] 7.6: (Optional) Add ContractGuardAgent to validate/fix schema counts and enum values
+
+## Status
+
+IN_PROGRESS
