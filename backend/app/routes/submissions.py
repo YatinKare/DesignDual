@@ -87,157 +87,159 @@ async def create_submission_endpoint(
     import json
     import uuid
 
-    # Validate problem_id exists in database
-    problem = await get_problem_by_id(connection, problem_id)
-    if problem is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Problem with id '{problem_id}' not found",
-        )
-
-    # Parse phase_times JSON
     try:
-        phase_times_dict = json.loads(phase_times)
-    except json.JSONDecodeError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid phase_times JSON: {e}",
-        )
-
-    # Validate phase_times has exactly the 4 required keys
-    required_phases = {"clarify", "estimate", "design", "explain"}
-    provided_phases = set(phase_times_dict.keys())
-
-    if provided_phases != required_phases:
-        missing = required_phases - provided_phases
-        extra = provided_phases - required_phases
-        error_parts = []
-        if missing:
-            error_parts.append(f"missing phases: {sorted(missing)}")
-        if extra:
-            error_parts.append(f"unexpected phases: {sorted(extra)}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"phase_times must contain exactly [clarify, estimate, design, explain]. {', '.join(error_parts)}",
-        )
-
-    # Convert to typed dict with PhaseName enum
-    try:
-        phase_times_typed = {
-            PhaseName(phase): seconds for phase, seconds in phase_times_dict.items()
-        }
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid phase name in phase_times: {e}",
-        )
-
-    # Validate all canvas files are non-empty before processing
-    canvas_validations = [
-        (canvas_clarify, "clarify"),
-        (canvas_estimate, "estimate"),
-        (canvas_design, "design"),
-        (canvas_explain, "explain"),
-    ]
-    for canvas_file, phase_name in canvas_validations:
-        _validate_canvas_file(canvas_file, phase_name)
-
-    # Generate submission ID before saving files
-    submission_id = str(uuid.uuid4())
-
-    # Initialize file storage service (get upload root and size limit from environment at runtime)
-    upload_root = os.getenv("UPLOAD_ROOT", "./storage/uploads")
-    max_size_mb = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
-    storage_service = get_file_storage_service(upload_root, max_size_mb)
-
-    # Save canvas files (required)
-    canvas_files = {
-        PhaseName.CLARIFY: canvas_clarify,
-        PhaseName.ESTIMATE: canvas_estimate,
-        PhaseName.DESIGN: canvas_design,
-        PhaseName.EXPLAIN: canvas_explain,
-    }
-
-    # Save audio files (optional)
-    audio_files = {
-        PhaseName.CLARIFY: audio_clarify,
-        PhaseName.ESTIMATE: audio_estimate,
-        PhaseName.DESIGN: audio_design,
-        PhaseName.EXPLAIN: audio_explain,
-    }
-
-    # Build phases dictionary with file paths
-    phases_dict: Dict[PhaseName, PhaseArtifacts] = {}
-    # Also collect artifact URLs for the submission_artifacts table
-    artifacts_batch: Dict[PhaseName, Dict[str, Optional[str]]] = {}
-
-    try:
-        for phase_name in [
-            PhaseName.CLARIFY,
-            PhaseName.ESTIMATE,
-            PhaseName.DESIGN,
-            PhaseName.EXPLAIN,
-        ]:
-            # Save canvas (required)
-            canvas_path = await storage_service.save_canvas(
-                canvas_files[phase_name],
-                submission_id,
-                phase_name.value,
+        # Validate problem_id exists in database
+        problem = await get_problem_by_id(connection, problem_id)
+        if problem is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Problem with id '{problem_id}' not found",
             )
 
-            # Save audio (optional)
-            audio_path = await storage_service.save_audio(
-                audio_files[phase_name],
-                submission_id,
-                phase_name.value,
+        # Parse phase_times JSON
+        try:
+            phase_times_dict = json.loads(phase_times)
+        except json.JSONDecodeError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid phase_times JSON: {e}",
             )
 
-            phases_dict[phase_name] = PhaseArtifacts(
-                canvas_path=canvas_path,
-                audio_path=audio_path,
+        # Validate phase_times has exactly the 4 required keys
+        required_phases = {"clarify", "estimate", "design", "explain"}
+        provided_phases = set(phase_times_dict.keys())
+
+        if provided_phases != required_phases:
+            missing = required_phases - provided_phases
+            extra = provided_phases - required_phases
+            error_parts = []
+            if missing:
+                error_parts.append(f"missing phases: {sorted(missing)}")
+            if extra:
+                error_parts.append(f"unexpected phases: {sorted(extra)}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"phase_times must contain exactly [clarify, estimate, design, explain]. {', '.join(error_parts)}",
             )
 
-            # Convert paths to URLs for artifact table
-            canvas_url = storage_service.path_to_url(canvas_path) if canvas_path else None
-            audio_url = storage_service.path_to_url(audio_path) if audio_path else None
-
-            artifacts_batch[phase_name] = {
-                "canvas_url": canvas_url,
-                "audio_url": audio_url,
-                "canvas_mime_type": "image/png" if canvas_url else None,
-                "audio_mime_type": "audio/webm" if audio_url else None,
+        # Convert to typed dict with PhaseName enum
+        try:
+            phase_times_typed = {
+                PhaseName(phase): seconds for phase, seconds in phase_times_dict.items()
             }
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid phase name in phase_times: {e}",
+            )
 
-    except IOError as e:
-        # If any file save fails, cleanup and raise error
-        storage_service.delete_submission_files(submission_id)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to save uploaded files: {e}",
+        # Validate all canvas files are non-empty before processing
+        canvas_validations = [
+            (canvas_clarify, "clarify"),
+            (canvas_estimate, "estimate"),
+            (canvas_design, "design"),
+            (canvas_explain, "explain"),
+        ]
+        for canvas_file, phase_name in canvas_validations:
+            _validate_canvas_file(canvas_file, phase_name)
+
+        # Generate submission ID before saving files
+        submission_id = str(uuid.uuid4())
+
+        # Initialize file storage service (get upload root and size limit from environment at runtime)
+        upload_root = os.getenv("UPLOAD_ROOT", "./storage/uploads")
+        max_size_mb = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
+        storage_service = get_file_storage_service(upload_root, max_size_mb)
+
+        # Save canvas files (required)
+        canvas_files = {
+            PhaseName.CLARIFY: canvas_clarify,
+            PhaseName.ESTIMATE: canvas_estimate,
+            PhaseName.DESIGN: canvas_design,
+            PhaseName.EXPLAIN: canvas_explain,
+        }
+
+        # Save audio files (optional)
+        audio_files = {
+            PhaseName.CLARIFY: audio_clarify,
+            PhaseName.ESTIMATE: audio_estimate,
+            PhaseName.DESIGN: audio_design,
+            PhaseName.EXPLAIN: audio_explain,
+        }
+
+        # Build phases dictionary with file paths
+        phases_dict: Dict[PhaseName, PhaseArtifacts] = {}
+        # Also collect artifact URLs for the submission_artifacts table
+        artifacts_batch: Dict[PhaseName, Dict[str, Optional[str]]] = {}
+
+        try:
+            for phase_name in [
+                PhaseName.CLARIFY,
+                PhaseName.ESTIMATE,
+                PhaseName.DESIGN,
+                PhaseName.EXPLAIN,
+            ]:
+                # Save canvas (required)
+                canvas_path = await storage_service.save_canvas(
+                    canvas_files[phase_name],
+                    submission_id,
+                    phase_name.value,
+                )
+
+                # Save audio (optional)
+                audio_path = await storage_service.save_audio(
+                    audio_files[phase_name],
+                    submission_id,
+                    phase_name.value,
+                )
+
+                phases_dict[phase_name] = PhaseArtifacts(
+                    canvas_path=canvas_path,
+                    audio_path=audio_path,
+                )
+
+                # Convert paths to URLs for artifact table
+                canvas_url = storage_service.path_to_url(canvas_path) if canvas_path else None
+                audio_url = storage_service.path_to_url(audio_path) if audio_path else None
+
+                artifacts_batch[phase_name] = {
+                    "canvas_url": canvas_url,
+                    "audio_url": audio_url,
+                    "canvas_mime_type": "image/png" if canvas_url else None,
+                    "audio_mime_type": "audio/webm" if audio_url else None,
+                }
+
+        except IOError as e:
+            # If any file save fails, cleanup and raise error
+            storage_service.delete_submission_files(submission_id)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to save uploaded files: {e}",
+            )
+
+        # Create submission record with file paths
+        submission = await create_submission(
+            connection=connection,
+            problem_id=problem_id,
+            phase_times=phase_times_typed,
+            phases=phases_dict,
+            submission_id=submission_id,
         )
 
-    # Create submission record with file paths
-    submission = await create_submission(
-        connection=connection,
-        problem_id=problem_id,
-        phase_times=phase_times_typed,
-        phases=phases_dict,
-        submission_id=submission_id,
-    )
+        # Persist artifacts to submission_artifacts table
+        try:
+            await save_submission_artifacts_batch(connection, submission_id, artifacts_batch)
+        except Exception as e:
+            logger.error(f"Failed to persist artifacts for submission {submission_id}: {e}")
 
-    # Persist artifacts to submission_artifacts table
-    try:
-        await save_submission_artifacts_batch(connection, submission_id, artifacts_batch)
+        background_tasks.add_task(run_grading_pipeline_background, submission.id)
+
+        return {"submission_id": submission.id}
+    except HTTPException:
+        raise
     except Exception as e:
-        # Log error but don't fail the request - artifacts are already in phases JSON
-        import logging
-
-        logger = logging.getLogger(__name__)
-        logger.error(f"Failed to persist artifacts for submission {submission_id}: {e}")
-
-    background_tasks.add_task(run_grading_pipeline_background, submission.id)
-
-    return {"submission_id": submission.id}
+        logger.error("Failed to create submission: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to create submission")
 
 
 @router.get("/api/submissions/{submission_id}", response_model=SubmissionResultV2)
@@ -416,6 +418,20 @@ async def _generate_grading_events(
                         }
                 return
 
+        except Exception as e:
+            logger.error(
+                "Failed while streaming grading events for %s: %s",
+                submission_id,
+                e,
+                exc_info=True,
+            )
+            yield {
+                "data": json.dumps({
+                    "status": "failed",
+                    "message": "Failed to stream grading events.",
+                })
+            }
+            return
         finally:
             await connection.close()
 
@@ -460,14 +476,18 @@ async def stream_grading_progress(submission_id: str) -> EventSourceResponse:
     Returns:
         EventSourceResponse: SSE stream of grading events
     """
-    return EventSourceResponse(
-        _generate_grading_events(submission_id),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",  # Disable nginx buffering
-        },
-    )
+    try:
+        return EventSourceResponse(
+            _generate_grading_events(submission_id),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",  # Disable nginx buffering
+            },
+        )
+    except Exception as e:
+        logger.error("Failed to start stream for submission %s: %s", submission_id, e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to start grading stream")
 
 
 __all__ = ["router"]

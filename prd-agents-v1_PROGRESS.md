@@ -261,7 +261,7 @@ Based on the PRD, the backend needs:
 - [x] 10.5: End-to-end test: upload submission → stream progress → fetch result via curl.
 
 ### Phase 11: Error Handling & Robustness
-- [ ] 11.1: Add comprehensive error handling to all routes
+- [x] 11.1: Add comprehensive error handling to all routes
 - [ ] 11.2: Add logging for debugging (use Python logging module)
 - [ ] 11.3: Handle edge cases (missing files, invalid data, API failures)
 - [ ] 11.4: Add request validation with Pydantic
@@ -1977,4 +1977,37 @@ IN_PROGRESS
 - Total tasks in main Task List: 85
 - Marked complete `[x]`: 74
 - Remaining `[ ]`: 11
+- Status remains `IN_PROGRESS` because unchecked tasks remain.
+
+## Iteration Update (Task 11.1 - Sun Feb 8 2026)
+
+### Status
+IN_PROGRESS
+
+### Completed This Iteration
+- Task 11.1: Added comprehensive error handling coverage across remaining route gaps.
+  - Updated `backend/app/routes/problems.py`:
+    - Wrapped both endpoints in try/except with structured `HTTPException` responses.
+    - Added logging on unexpected failures (`500` fallback).
+  - Updated `backend/app/routes/submissions.py`:
+    - Added top-level guarded error handling in `POST /api/submissions`.
+    - Added stream-failure protection inside `_generate_grading_events` so SSE emits a terminal failed event on runtime exceptions.
+    - Added startup guard in `/api/submissions/{id}/stream` with `500` fallback on initialization errors.
+  - Updated `backend/app/main.py`:
+    - Added app-level handlers for `RequestValidationError` and unhandled exceptions with consistent JSON responses.
+
+### Validation
+- Manual runtime checks (non-unit) with `uv run uvicorn` + `curl`:
+  - `GET /api/problems` -> `200`
+  - `GET /api/problems/not-real` -> `404`
+  - `POST /api/submissions` with invalid `phase_times` -> `400`
+  - `GET /api/submissions/not-real` -> `404`
+  - `GET /api/submissions/not-real/stream` emitted failed SSE event
+- Syntax verification:
+  - `uv run python -m py_compile app/main.py app/routes/problems.py app/routes/submissions.py`
+
+### Task Count Check
+- Total tasks in main Task List: 85
+- Marked complete `[x]`: 75
+- Remaining `[ ]`: 10
 - Status remains `IN_PROGRESS` because unchecked tasks remain.
